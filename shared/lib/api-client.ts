@@ -3,6 +3,11 @@
 // 책임 아님(진경 담당): Authorization 헤더 자동 첨부, 401 시 reissue 후 재시도
 //   → headers 병합 지점과 에러 throw 지점만 남겨두고, 그 로직 자체는 구현하지 않는다.
 import type { ApiResponse } from "@/shared/types/api-response";
+import {
+  clearAccessToken,
+  getAccessToken,
+  setAccessToken,
+} from "@/shared/lib/token-store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -15,23 +20,138 @@ export class ApiError extends Error {
 
 type ApiClientOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
+// Refresh Token으로 Access Token 재발급
+async function reissueAccessToken(): Promise<string | null> {
+  // sessionStorage는 브라우저에서만 사용할 수 있다.
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const refreshToken = sessionStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reissue`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refreshToken,
+      }),
+    });
+
+    const result: ApiResponse<{
+      accessToken: string;
+      refreshToken: string;
+    }> = await response.json();
+
+    if (!response.ok || !result.success || !result.data) {
+      return null;
+    }
+
+    setAccessToken(result.data.accessToken);
+
+    // 백엔드가 Refresh Token도 반환하므로 최신 값으로 저장한다.
+    sessionStorage.setItem(
+      "refreshToken",
+      result.data.refreshToken
+    );
+
+    return result.data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
 export async function apiClient<T>(
   path: string,
   { body, headers, ...options }: ApiClientOptions = {}
 ): Promise<T> {
+  const accessToken = getAccessToken();
+console.log("[apiClient 요청]", path, body);
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...headers }, // 진경이 여기에 Authorization 헤더를 병합하게 될 자리
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+
+      // 진경 담당: Access Token이 있으면 Authorization 헤더에 추가
+      ...(accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {}),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-
+console.log("[apiClient 응답]", response.status);
   const result: ApiResponse<T> = await response.json();
 
   if (!response.ok || !result.success) {
-    // 진경이 이 catch 지점(또는 이 함수를 감싼 래퍼)에서 401만 걸러내
-    // reissue 호출 → 원요청 1회 재시도를 붙이면 됨
-    throw new ApiError(response.status, result.message ?? "요청에 실패했습니다.");
+    // 로그인/회원가입/재발급 자체에서 발생한 401은
+    // 다시 reissue하지 않는다.
+    const isAuthPublicApi =
+      path === "/api/auth/login" ||
+      path === "/api/auth/signup" ||
+      path === "/api/auth/reissue";
+
+    // 진경 담당: 인증이 필요한 API의 401인 경우에만
+    // Refresh Token으로 Access Token 재발급
+    if (response.status === 401 && !isAuthPublicApi) {
+      const newAccessToken = await reissueAccessToken();
+
+      if (newAccessToken) {
+        // 원래 요청을 새 Access Token으로 1회 재시도
+        const retryResponse = await fetch(`${API_BASE_URL}${path}`, {
+          ...options,
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+            Authorization: `Bearer ${newAccessToken}`,
+          },
+          body:
+            body === undefined ? undefined : JSON.stringify(body),
+        });
+
+        const retryResult: ApiResponse<T> =
+          await retryResponse.json();
+
+        if (retryResponse.ok && retryResult.success) {
+          return retryResult.data as T;
+        }
+
+        // 재시도까지 401이면 인증 만료로 처리
+        if (retryResponse.status === 401) {
+          clearAccessToken();
+
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("refreshToken");
+          }
+        }
+
+        throw new ApiError(
+          retryResponse.status,
+          retryResult.message ?? "요청에 실패했습니다."
+        );
+      }
+
+      // Refresh Token 재발급도 실패하면 로그아웃 상태로 정리
+      clearAccessToken();
+
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("refreshToken");
+      }
+    }
+
+    // 403은 로그아웃하지 않고 그대로 에러 처리
+    throw new ApiError(
+      response.status,
+      result.message ?? "요청에 실패했습니다."
+    );
   }
 
   return result.data as T;
