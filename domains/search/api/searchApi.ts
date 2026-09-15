@@ -7,8 +7,16 @@ interface SearchParams {
   size?: number;
 }
 
+// 백엔드 SearchController의 기본값과 동일하게 맞춤
+export const DEFAULT_PAGE = 0;
+export const DEFAULT_PAGE_SIZE = 3;
+
 // GET /api/search?query=&page=&size=
-export function searchDiaries({ query, page = 0, size = 3 }: SearchParams) {
+export function searchDiaries({
+  query,
+  page = DEFAULT_PAGE,
+  size = DEFAULT_PAGE_SIZE,
+ }: SearchParams) {
   const params = new URLSearchParams({
     query,
     page: String(page),

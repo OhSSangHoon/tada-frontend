@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { searchDiaries } from "@/domains/search/api/searchApi";
+import { searchDiaries, DEFAULT_PAGE_SIZE } from "@/domains/search/api/searchApi";
 import type { SearchResultPage } from "@/domains/search/types/search";
 import type { ApiError } from "@/shared/lib/api-client";
 
-const PAGE_SIZE = 3;
 export const MAX_QUERY_LENGTH = 20;
 
 export function useSearch() {
@@ -18,7 +17,7 @@ export function useSearch() {
   const { data, isFetching, isError, error, refetch } = useQuery<SearchResultPage, ApiError>({
     queryKey: ["search", submittedQuery, page],
     queryFn: () =>
-      searchDiaries({ query: submittedQuery, page, size: PAGE_SIZE }),
+      searchDiaries({ query: submittedQuery, page, size: DEFAULT_PAGE_SIZE }),
     enabled: submittedQuery.length > 0,
     placeholderData: keepPreviousData,
   });

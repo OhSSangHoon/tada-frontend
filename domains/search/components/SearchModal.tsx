@@ -4,6 +4,7 @@ import { FormEvent } from "react";
 import { useSearch, MAX_QUERY_LENGTH } from "@/domains/search/hooks/useSearch";
 import { SearchResultList } from "@/domains/search/components/SearchResultList";
 import { Pagination } from "@/domains/search/components/Pagination";
+import { ApiError } from "@/shared/lib/api-client";
 
 interface SearchModalProps {
   onClose: () => void;
@@ -61,7 +62,11 @@ export function SearchModal({ onClose, onSelectDiary }: SearchModalProps) {
 
         {isError && (
           <div className="search-modal__status search-modal__status--error" role="alert">
-            <p>{error?.message || "검색 중 오류가 발생했습니다."}</p>
+            <p>
+              {error instanceof ApiError
+              ? error.message
+              : "네트워크 연결을 확인하고 다시 시도해 주세요."}
+            </p>
             <button type="button" onClick={() => refetch()}>
               다시시도
             </button>

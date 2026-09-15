@@ -1,4 +1,4 @@
-import { SearchResultResponse } from "@/domains/search/types/search";
+import type { SearchResultResponse } from "@/domains/search/types/search";
 
 interface SearchResultListProps {
   items: SearchResultResponse[];
