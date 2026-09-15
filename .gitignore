@@ -43,3 +43,5 @@ next-env.d.ts
 # md
 tada_directory_structure.md
 frontend_directory_structure.md
+
+*.md
