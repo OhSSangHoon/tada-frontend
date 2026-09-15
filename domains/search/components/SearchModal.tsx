@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
-import { useSearch } from "@/domains/search/hooks/useSearch";
+import { useSearch, MAX_QUERY_LENGTH } from "@/domains/search/hooks/useSearch";
 import { SearchResultList } from "@/domains/search/components/SearchResultList";
 import { Pagination } from "@/domains/search/components/Pagination";
 
@@ -20,6 +20,9 @@ export function SearchModal({ onClose, onSelectDiary }: SearchModalProps) {
     result,
     isFetching,
     isError,
+    error,
+    refetch,
+    validationError,
   } = useSearch();
 
   function handleSubmit(e: FormEvent) {
@@ -36,6 +39,7 @@ export function SearchModal({ onClose, onSelectDiary }: SearchModalProps) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="예: 기분 나쁜 날 있었나?"
+            maxLength={MAX_QUERY_LENGTH}
             autoFocus
           />
           <button type="submit" disabled={isFetching}>
@@ -43,14 +47,31 @@ export function SearchModal({ onClose, onSelectDiary }: SearchModalProps) {
           </button>
         </form>
 
-        {isFetching && <p className="search-modal__status">검색 중...</p>}
-        {isError && (
-          <p className="search-modal__status search-modal__status--error">
-            검색 중 오류가 발생했습니다. 다시 시도해주세요
+        {validationError && (
+          <p className="search-modal__status search-modal__status--error" role="alert">
+            {validationError}
           </p>
         )}
+
+        {isFetching && (
+          <p className="search-modal__status" aria-live="polite">
+            검색 중...
+          </p>
+        )}
+
+        {isError && (
+          <div className="search-modal__status search-modal__status--error" role="alert">
+            <p>{error?.message || "검색 중 오류가 발생했습니다."}</p>
+            <button type="button" onClick={() => refetch()}>
+              다시시도
+            </button>
+          </div>
+        )}
+
         {result?.empty && (
-          <p className="search-modal__status">검색 결과가 없습니다.</p>
+          <p className="search-modal__status">
+            &quot;{submittedQuery}&quot;에 대한 검색 결과가 없습니다.
+            </p>
         )}
 
         {result && !result.empty && (
