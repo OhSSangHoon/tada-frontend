@@ -14,6 +14,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // useEffect로 붙이면 됨 (accessToken 메모리 복원, 새로고침해도 로그인 유지).
   const hasRestoredRef = useRef(false);
 
+  // Access Token 복원이 끝났는지 관리한다.
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
   useEffect(() => {
     // 부팅 시 한 번만 Access Token 복원을 시도한다.
     if (hasRestoredRef.current) {
@@ -27,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
       // Refresh Token이 없으면 로그인하지 않은 상태이므로 종료한다.
       if (!refreshToken) {
+        setIsAuthReady(true);
         return;
       }
 
@@ -43,6 +47,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       } catch {
         // Refresh Token 재발급에 실패하면 저장된 Refresh Token을 제거한다.
         sessionStorage.removeItem("refreshToken");
+      } finally {
+        // Access Token 복원이 끝난 후 children을 렌더링한다.
+        setIsAuthReady(true);
       }
     };
 
@@ -50,6 +57,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      {isAuthReady ? children : null}
+    </QueryClientProvider>
   );
 }
