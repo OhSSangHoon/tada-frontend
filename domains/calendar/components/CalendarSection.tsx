@@ -12,21 +12,29 @@ type ModalState =
     | { type: "detail"; diaryId: string; imageUrl: string }
     | null;
 
+const today = new Date();
+const TODAY_STR = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+const CURRENT_YEAR = today.getFullYear();
+const YEAR_RANGE = 20;
+
 export function CalendarSection() {
-    const [year, setYear] = useState(2026);
-    const [month, setMonth] = useState(9);
+    const [year, setYear] = useState(CURRENT_YEAR);
+    const [month, setMonth] = useState(today.getMonth() + 1);
     const [modal, setModal] = useState<ModalState>(null);
 
-    const { data, isLoading, isError } = useCalendar(year, month);
+    const { data, isLoading, isError, isFetching } = useCalendar(year, month);
     const canCreateMutation = useCanCreate();
     const daysInMonth = new Date(year, month, 0).getDate();
     const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+    const pendingDate = canCreateMutation.isPending ? canCreateMutation.variables : undefined;
 
-    async function handleDayClick(dateStr: string, item: CalendarItem | undefined) {
+    async function handleDayClick(dateStr: string, item: CalendarItem | undefined, isFuture: boolean) {
         if (item) {
             setModal({ type: "detail", diaryId: item.diaryId, imageUrl: item.imageUrl });
             return;
         }
+
+        if (isFuture) return;
 
         const result = await canCreateMutation.mutateAsync(dateStr);
         if (!result.canCreate) {
@@ -39,8 +47,20 @@ export function CalendarSection() {
 
     const itemsByDate = new Map(data?.map((item) => [item.entryDate, item]) ?? []);
 
-    if (isLoading) return <div>로딩중...</div>;
-    if (isError) return <div>불러오기 실패</div>;
+    if (isLoading) {
+        return (
+            <div className="bg-white shadow-xl p-8 w-[820px] h-[920px] mx-auto flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
+            </div>
+        );
+    }
+    if (isError) {
+        return (
+            <div className="bg-white shadow-xl p-8 w-[820px] h-[920px] mx-auto flex items-center justify-center text-sm text-gray-500">
+                불러오기 실패
+            </div>
+        );
+    }
 
     const selectClassName =
         "w-[145px] h-[50px] rounded-lg bg-[#E6E6E6] border-none appearance-none bg-no-repeat bg-[right_16px_center] pl-5 pr-9 cursor-pointer";
@@ -66,7 +86,10 @@ export function CalendarSection() {
             >
                 {String(month).padStart(2, "0")}
             </span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+                {isFetching && (
+                    <div className="w-5 h-5 border-2 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin mr-1" />
+                )}
                 <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
                 className={selectClassName} style={selectArrowStyle}>
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -75,7 +98,7 @@ export function CalendarSection() {
                 </select>
                 <select value={year} onChange={(e) => setYear(Number(e.target.value))}
                 className={selectClassName} style={selectArrowStyle}>
-                    {Array.from({ length: 11 }, (_, i) => 2020 + i).map((y) => (
+                    {Array.from({ length: YEAR_RANGE * 2 + 1 }, (_, i) => CURRENT_YEAR - YEAR_RANGE + i).map((y) => (
                         <option key={y} value={y}>{y}년</option>
                     ))}
                 </select>
@@ -89,23 +112,31 @@ export function CalendarSection() {
                 <div key={d}>{d}</div>
             ))}
         </div>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-3">
             {Array.from({ length: firstDayOfWeek }, (_, i) => (
                 <div key={`empty-${i}`}></div>
             ))}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
                 const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                 const item = itemsByDate.get(dateStr);
+                const isFuture = !item && dateStr > TODAY_STR;
+                const isChecking = pendingDate === dateStr;
 
                 return (
                     <div
                         key={day}
-                        onClick={() => handleDayClick(dateStr, item)}
-                        className="border border-gray-200 aspect-square flex items-center justify-center text-[#A6A6A6] cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleDayClick(dateStr, item, isFuture)}
+                        className={`border border-gray-300 aspect-square flex items-center justify-center relative transition-colors ${
+                            isFuture
+                                ? "text-gray-300 cursor-default"
+                                : "text-[#40312E] cursor-pointer hover:bg-[#FFEDD5]"
+                        }`}
                         style={{ fontFamily: "'Kyobo Handwriting 2025', sans-serif", fontSize: "24px" }}
                     >
-                        {item ? (
-                            <img src={item.imageUrl} alt={item.keyword} className="w-full h-full object-contain p-1" />
+                        {isChecking ? (
+                            <div className="w-6 h-6 border-2 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
+                        ) : item ? (
+                            <img src={item.imageUrl} alt={item.keyword} className="w-full h-full object-contain p-2.5" />
                         ) : (
                             day
                         )}

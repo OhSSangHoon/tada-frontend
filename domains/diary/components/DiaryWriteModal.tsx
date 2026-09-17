@@ -68,7 +68,7 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
         setSelectedKeyword(keyword);
         setStep("loading");
         try {
-            const result = await generateStickerMutation.mutateAsync(keyword);
+            const result = await generateStickerMutation.mutateAsync({ keyword });
             setStickerImageUrl(result.imageUrl);
             setStep("result");
         } catch (error) {
@@ -82,7 +82,10 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
         setHasRegenerated(true);
         setStep("loading");
         try {
-            const result = await generateStickerMutation.mutateAsync(selectedKeyword);
+            const result = await generateStickerMutation.mutateAsync({
+                keyword: selectedKeyword,
+                excludeImageUrl: stickerImageUrl ?? undefined,
+            });
             setStickerImageUrl(result.imageUrl);
             setStep("result");
         } catch (error) {
@@ -111,8 +114,14 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
     }
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-3xl shadow-xl w-[520px] p-8 relative">
+        <div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            onClick={handleRequestClose}
+        >
+            <div
+                className="bg-white rounded-3xl shadow-xl w-[520px] p-8 relative"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <button
                     onClick={handleRequestClose}
                     className="absolute top-6 right-6 text-[#F97316] text-2xl leading-none cursor-pointer"
@@ -123,17 +132,16 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
 
                 {step === "content" && (
                     <>
-                        <div className="mb-4">
+                        <div className="mb-4 flex items-center gap-2">
                             <span className="bg-[#F97316] text-white rounded-full px-5 py-2 text-sm font-medium">
                                 {formatDisplayDate(initialDate)}
                             </span>
-                        </div>
-                        <div className="relative inline-block mb-3">
+                            <div className="relative inline-block">
                             <button
                                 onClick={() => setShowWeatherPicker((v) => !v)}
-                                className="text-sm border rounded-full px-3 py-1 cursor-pointer"
+                                className="w-28 text-center whitespace-nowrap text-sm border rounded-full px-3 py-2 cursor-pointer"
                             >
-                                {weather ?? "날씨 선택 안함"}
+                                {weather ?? "날씨 선택"}
                             </button>
                             {showWeatherPicker && (
                                 <div className="absolute top-full left-0 mt-2 bg-white border rounded-xl shadow-lg p-2 z-10 flex flex-col gap-1 w-36">
@@ -144,7 +152,7 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
                                         }}
                                         className="text-left text-sm text-gray-400 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"
                                     >
-                                        설정 안함
+                                        선택 안함
                                     </button>
                                     {WEATHER_OPTIONS.map((w, i) => (
                                         <button
@@ -160,6 +168,7 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
                                     ))}
                                 </div>
                             )}
+                            </div>
                         </div>
                         <textarea
                             value={content}
@@ -220,7 +229,7 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
 
                 {step === "result" && stickerImageUrl && (
                     <div className="flex flex-col items-center py-4">
-                        <img src={stickerImageUrl} alt={selectedKeyword ?? ""} className="w-28 h-28 mb-4" />
+                        <img src={stickerImageUrl} alt={selectedKeyword ?? ""} className="w-28 h-28 object-contain mb-4" />
                         <p className="text-[#F97316] font-semibold text-lg mb-6">{title}</p>
                         {!hasRegenerated && (
                             <button onClick={handleRegenerate} className="text-sm text-gray-400 underline mb-4 cursor-pointer">

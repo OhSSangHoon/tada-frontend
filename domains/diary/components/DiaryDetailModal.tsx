@@ -57,8 +57,14 @@ export function DiaryDetailModal({ diaryId, imageUrl, onClose }: DiaryDetailModa
     }
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-3xl shadow-xl w-[520px] p-8 relative">
+        <div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-3xl shadow-xl w-[520px] p-8 relative"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <button
                     onClick={onClose}
                     className="absolute top-6 right-6 text-[#F97316] text-2xl leading-none cursor-pointer"
@@ -72,7 +78,7 @@ export function DiaryDetailModal({ diaryId, imageUrl, onClose }: DiaryDetailModa
 
                 {data && (
                     <div className="flex flex-col items-center">
-                        <img src={imageUrl} alt={data.title} className="w-24 h-24 mb-3" />
+                        <img src={imageUrl} alt={data.title} className="w-24 h-24 object-contain mb-3" />
                         <p className="text-[#F97316] font-semibold text-lg mb-4">{data.title}</p>
 
                         {!isEditing && (
@@ -82,7 +88,7 @@ export function DiaryDetailModal({ diaryId, imageUrl, onClose }: DiaryDetailModa
                                         {data.entryDate}
                                     </span>
                                     {data.weather && (
-                                        <span className="bg-gray-200 text-gray-700 rounded-full px-4 py-2 text-sm">
+                                        <span className="bg-gray-100 text-gray-700 rounded-full px-4 py-2 text-sm">
                                             {data.weather}
                                         </span>
                                     )}
@@ -118,9 +124,9 @@ export function DiaryDetailModal({ diaryId, imageUrl, onClose }: DiaryDetailModa
                                 <div className="relative inline-block mb-3">
                                     <button
                                         onClick={() => setShowWeatherPicker((v) => !v)}
-                                        className="text-sm border rounded-full px-3 py-1 cursor-pointer"
+                                        className="w-28 text-center whitespace-nowrap text-sm border rounded-full px-3 py-2 cursor-pointer"
                                     >
-                                        {weather ?? "날씨 선택 안함"}
+                                        {weather ?? "날씨 선택"}
                                     </button>
                                     {showWeatherPicker && (
                                         <div className="absolute top-full left-0 mt-2 bg-white border rounded-xl shadow-lg p-2 z-10 flex flex-col gap-1 w-36">
@@ -131,7 +137,7 @@ export function DiaryDetailModal({ diaryId, imageUrl, onClose }: DiaryDetailModa
                                                 }}
                                                 className="text-left text-sm text-gray-400 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"
                                             >
-                                                설정 안함
+                                                선택 안함
                                             </button>
                                             {WEATHER_OPTIONS.map((w) => (
                                                 <button
