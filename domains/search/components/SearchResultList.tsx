@@ -1,50 +1,82 @@
+"use client";
+
 import type { SearchResultResponse } from "@/domains/search/types/search";
 
 interface SearchResultListProps {
-  items: SearchResultResponse[];
+  results: SearchResultResponse[];
   keyword: string;
-  onSelectDiary?: (diaryId: string) => void;
 }
 
-export function SearchResultList({
-  items,
-  keyword,
-  onSelectDiary,
-}: SearchResultListProps) {
-  if (items.length === 0) return null;
+const CONTENT_PREVIEW_LENGTH = 60;
 
-  return (
-    <ul className="search-result-list">
-      {items.map((item) => (
-        <li
-          key={item.id}
-          className="search-result-item"
-          onClick={() => onSelectDiary?.(item.id)}
-        >
-          <div className="search-result-item__meta">
-            <span>{item.entryDate}</span>
-            <span>{item.weather}</span>
-          </div>
-          <h3>{highlightKeyword(item.title, keyword)}</h3>
-          <p>{highlightKeyword(truncate(item.content, 80), keyword)}</p>
-        </li>
-      ))}
-    </ul>
-  );
+function truncate(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}...`;
 }
 
-function truncate(text: string, max: number) {
-  return text.length > max ? `${text.slice(0, max)}...` : text;
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function highlightKeyword(text: string, keyword: string) {
-  const trimmed = keyword.trim();
-  if (!trimmed) return text;
+  if (!keyword) return text;
 
-  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  const parts = text.split(new RegExp(`(${escapeRegExp(keyword)})`, "gi"));
 
   return parts.map((part, i) =>
-    i % 2 === 1 ? <mark key={i}>{part}</mark> : <span key={i}>{part}</span>,
+    part.toLowerCase() === keyword.toLocaleLowerCase() ? (
+      <mark key={i} className="rounded bg-yellow-200 px-0.5 text-inherit">
+        {part}
+      </mark>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
+export function SearchResultList({ results, keyword }: SearchResultListProps) {
+  return (
+    <ul className="flex flex-col divide-y divide-gray-100">
+      {results.map((item) => (
+        <li key={item.id} className="flex gap-3 px-4 py-3 hover:bg-gray-50">
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-orange-50">
+            {item.stickerImageUrl ? (
+              <img
+                src={item.stickerImageUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-orange-200">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="currentColor"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="truncate text-sm font-medium text-gray-900">
+                {highlightKeyword(item.title, keyword)}
+              </p>
+              <span className="shrink-0 text-xs text-gray-400">
+                {item.entryDate}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-gray-500">
+              {highlightKeyword(
+                truncate(item.content, CONTENT_PREVIEW_LENGTH),
+                keyword,
+              )}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
