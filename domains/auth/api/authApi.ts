@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/lib/api-client";
-import {
+import type {
   AuthResponse,
   LoginRequest,
   MeResponse,
@@ -44,17 +44,3 @@ export function logout() {
     method: "POST",
   });
 }
-
-/* api-client.ts의 역할
-
-authApi.ts
-   ↓
-apiClient(경로, 요청 옵션)
-   ↓
-Authorization 자동 첨부
-   ↓
-401 → reissue
-   ↓
-백엔드
-
-*/

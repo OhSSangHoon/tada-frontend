@@ -5,8 +5,11 @@
 import type { ApiResponse } from "@/shared/types/api-response";
 import {
   clearAccessToken,
+  clearRefreshToken,
   getAccessToken,
+  getRefreshToken,
   setAccessToken,
+  setRefreshToken,
 } from "@/shared/lib/token-store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -22,12 +25,7 @@ type ApiClientOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
 // Refresh Token으로 Access Token 재발급
 async function reissueAccessToken(): Promise<string | null> {
-  // sessionStorage는 브라우저에서만 사용할 수 있다.
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const refreshToken = sessionStorage.getItem("refreshToken");
+  const refreshToken = getRefreshToken();
 
   if (!refreshToken) {
     return null;
@@ -56,10 +54,7 @@ async function reissueAccessToken(): Promise<string | null> {
     setAccessToken(result.data.accessToken);
 
     // 백엔드가 Refresh Token도 반환하므로 최신 값으로 저장한다.
-    sessionStorage.setItem(
-      "refreshToken",
-      result.data.refreshToken
-    );
+    setRefreshToken(result.data.refreshToken);
 
     return result.data.accessToken;
   } catch {
@@ -72,7 +67,6 @@ export async function apiClient<T>(
   { body, headers, ...options }: ApiClientOptions = {}
 ): Promise<T> {
   const accessToken = getAccessToken();
-console.log("[apiClient 요청]", path, body);
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
@@ -87,7 +81,6 @@ console.log("[apiClient 요청]", path, body);
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-console.log("[apiClient 응답]", response.status);
   const result: ApiResponse<T> = await response.json();
 
   if (!response.ok || !result.success) {
@@ -127,10 +120,7 @@ console.log("[apiClient 응답]", response.status);
         // 재시도까지 401이면 인증 만료로 처리
         if (retryResponse.status === 401) {
           clearAccessToken();
-
-          if (typeof window !== "undefined") {
-            sessionStorage.removeItem("refreshToken");
-          }
+          clearRefreshToken();
         }
 
         throw new ApiError(
@@ -141,10 +131,7 @@ console.log("[apiClient 응답]", response.status);
 
       // Refresh Token 재발급도 실패하면 로그아웃 상태로 정리
       clearAccessToken();
-
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("refreshToken");
-      }
+      clearRefreshToken();
     }
 
     // 403은 로그아웃하지 않고 그대로 에러 처리

@@ -5,7 +5,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { reissue } from "@/domains/auth/api/authApi";
-import { setAccessToken } from "@/shared/lib/token-store";
+import { AuthReadyProvider } from "@/shared/lib/auth-ready-context";
+import {
+  clearRefreshToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+} from "@/shared/lib/token-store";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -26,7 +32,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     hasRestoredRef.current = true;
 
     const restoreAccessToken = async () => {
-      const refreshToken = sessionStorage.getItem("refreshToken");
+      const refreshToken = getRefreshToken();
 
       // Refresh Token이 없으면 로그인하지 않은 상태이므로 종료한다.
       if (!refreshToken) {
@@ -43,10 +49,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         setAccessToken(data.accessToken);
 
         // 백엔드가 Refresh Token도 반환하므로 최신 값으로 저장한다.
-        sessionStorage.setItem("refreshToken", data.refreshToken);
+        setRefreshToken(data.refreshToken);
       } catch {
         // Refresh Token 재발급에 실패하면 저장된 Refresh Token을 제거한다.
-        sessionStorage.removeItem("refreshToken");
+        clearRefreshToken();
       } finally {
         // Access Token 복원이 끝난 후 children을 렌더링한다.
         setIsAuthReady(true);
@@ -58,7 +64,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isAuthReady ? children : null}
+      <AuthReadyProvider value={isAuthReady}>{children}</AuthReadyProvider>
     </QueryClientProvider>
   );
 }

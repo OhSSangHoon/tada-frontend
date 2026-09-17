@@ -62,15 +62,3 @@ export function LoginForm() {
     </form>
   );
 }
-
-/*
- LoginForm
-    ↓
- useLogin()
-    ↓
- authApi.login()
-    ↓
- apiClient()
-    ↓
- 백엔드
- */

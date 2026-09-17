@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/domains/auth/api/authApi";
-import { SignupRequest } from "@/domains/auth/types/auth";
+import type { SignupRequest } from "@/domains/auth/types/auth";
 
 export function useSignup() {
   const router = useRouter();
@@ -15,15 +15,3 @@ export function useSignup() {
     },
   });
 }
-
-/*
- SignupForm
-    ↓
- useSignup()
-    ↓
- authApi.signUp()
-    ↓
- apiClient()
-    ↓
- POST /api/auth/signup
- */
