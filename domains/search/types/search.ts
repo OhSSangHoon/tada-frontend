@@ -6,6 +6,7 @@ export interface SearchResultResponse {
   weather: string;
   content: string;
   createdAt: string; // LocalDateTime -> ISO 8601 문자열
+  stickerImageUrl: string | null;
 }
 
 // Spring Data Page<T>가 직렬화되는 형태
@@ -13,14 +14,15 @@ export interface SearchResultResponse {
 // 그때는 shared/types로 옮기는 게 맞음 - 지금은 search만 사용
 export interface SpringPage<T> {
   content: T[];
-  number: number; // 현재 페이지, 0-base
-  size: number;
   totalElements: number;
   totalPages: number;
+  number: number; // 현재 페이지, 0-base
+  size: number;
   first: boolean;
   last: boolean;
-  empty: boolean;
-  numberOfElements: number;
 }
 
 export type SearchResultPage = SpringPage<SearchResultResponse>;
+
+// SearchController의 sort 쿼리 파라미터와 1:1 매핑 (기본값: latest)
+export type SearchSortOption = "latest" | "oldest";
