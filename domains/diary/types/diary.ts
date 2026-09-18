@@ -5,7 +5,7 @@ export interface CanCreateResponse {
 
 export type StickerType = "EXTRACTED" | "COMPRESSED";
 
-export interface DiaryDetail {
+export interface DiaryResponse {
   id: string;
   entryDate: string;
   title: string;
@@ -38,12 +38,12 @@ export interface UpdateDiaryRequest {
 }
 
 // mock — generate-title 백엔드 미구현(5주차 예정)이라 프론트에서 흉내만 냄
-export interface GenerateTitleResult {
+export interface GenerateTitleResponse {
   title: string;
   keywords: string[];
 }
 
 // mock — generate-sticker/regenerate-sticker 백엔드 미구현(5주차 예정)
-export interface GenerateStickerResult {
+export interface GenerateStickerResponse {
   imageUrl: string;
 }

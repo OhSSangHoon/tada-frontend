@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useCreateDiary } from "@/domains/diary/hooks/useCreateDiary";
 import { useGenerateSticker } from "@/domains/diary/hooks/useGenerateSticker";
 import { useGenerateTitle } from "@/domains/diary/hooks/useGenerateTitle";
@@ -229,7 +230,7 @@ export function DiaryWriteModal({ initialDate, onClose }: DiaryWriteModalProps) 
 
                 {step === "result" && stickerImageUrl && (
                     <div className="flex flex-col items-center py-4">
-                        <img src={stickerImageUrl} alt={selectedKeyword ?? ""} className="w-28 h-28 object-contain mb-4" />
+                        <Image src={stickerImageUrl} alt={selectedKeyword ?? ""} width={112} height={112} className="object-contain mb-4" />
                         <p className="text-[#F97316] font-semibold text-lg mb-6">{title}</p>
                         {!hasRegenerated && (
                             <button onClick={handleRegenerate} className="text-sm text-gray-400 underline mb-4 cursor-pointer">

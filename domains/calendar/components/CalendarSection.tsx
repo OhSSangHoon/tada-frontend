@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useCalendar } from "@/domains/calendar/hooks/useCalendar";
 import { useCanCreate } from "@/domains/diary/hooks/useCanCreate";
 import { DiaryWriteModal } from "@/domains/diary/components/DiaryWriteModal";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
-import type { CalendarItem } from "@/domains/calendar/types/calendar";
+import type { CalendarResponseItem } from "@/domains/calendar/types/calendar";
 
 type ModalState =
     | { type: "write"; date: string }
@@ -28,7 +29,7 @@ export function CalendarSection() {
     const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
     const pendingDate = canCreateMutation.isPending ? canCreateMutation.variables : undefined;
 
-    async function handleDayClick(dateStr: string, item: CalendarItem | undefined, isFuture: boolean) {
+    async function handleDayClick(dateStr: string, item: CalendarResponseItem | undefined, isFuture: boolean) {
         if (item) {
             setModal({ type: "detail", diaryId: item.diaryId, imageUrl: item.imageUrl });
             return;
@@ -65,7 +66,7 @@ export function CalendarSection() {
     const selectClassName =
         "w-[145px] h-[50px] rounded-lg bg-[#E6E6E6] border-none appearance-none bg-no-repeat bg-[right_16px_center] pl-5 pr-9 cursor-pointer";
     const selectArrowStyle = {
-        fontFamily: "'Google Sans Flex', sans-serif",
+        fontFamily: "var(--font-google-sans-flex), sans-serif",
         fontWeight: 600,
         fontSize: "20px",
         backgroundImage:
@@ -74,15 +75,11 @@ export function CalendarSection() {
 
     return (
     <>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..700&display=swap"
-        rel="stylesheet"
-    />
     <div className="bg-white shadow-xl p-8 w-[820px] h-[920px] mx-auto">
         <div className="flex justify-between items-center mb-6">
             <span
                 className="text-[#F97316] leading-none"
-                style={{ fontFamily: "'SEBANG Gothic', sans-serif", fontWeight: 700, fontSize: "128px" }}
+                style={{ fontFamily: "var(--font-sebang-gothic), sans-serif", fontWeight: 700, fontSize: "128px" }}
             >
                 {String(month).padStart(2, "0")}
             </span>
@@ -106,7 +103,7 @@ export function CalendarSection() {
         </div>
         <div
             className="grid grid-cols-7 text-center text-[#40312E] mb-3"
-            style={{ fontFamily: "'Kyobo Handwriting 2025', sans-serif", fontSize: "24px" }}
+            style={{ fontFamily: "var(--font-kyobo-handwriting), sans-serif", fontSize: "24px" }}
         >
             {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
                 <div key={d}>{d}</div>
@@ -131,12 +128,12 @@ export function CalendarSection() {
                                 ? "text-gray-300 cursor-default"
                                 : "text-[#40312E] cursor-pointer hover:bg-[#FFEDD5]"
                         }`}
-                        style={{ fontFamily: "'Kyobo Handwriting 2025', sans-serif", fontSize: "24px" }}
+                        style={{ fontFamily: "var(--font-kyobo-handwriting), sans-serif", fontSize: "24px" }}
                     >
                         {isChecking ? (
                             <div className="w-6 h-6 border-2 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
                         ) : item ? (
-                            <img src={item.imageUrl} alt={item.keyword} className="w-full h-full object-contain p-2.5" />
+                            <Image src={item.imageUrl} alt={item.keyword} fill className="object-contain p-2.5" />
                         ) : (
                             day
                         )}

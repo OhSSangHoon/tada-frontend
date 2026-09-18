@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useDiary } from "@/domains/diary/hooks/useDiary";
 import { useUpdateDiary } from "@/domains/diary/hooks/useUpdateDiary";
 import { useTrashDiary } from "@/domains/diary/hooks/useTrashDiary";
@@ -78,7 +79,7 @@ export function DiaryDetailModal({ diaryId, imageUrl, onClose }: DiaryDetailModa
 
                 {data && (
                     <div className="flex flex-col items-center">
-                        <img src={imageUrl} alt={data.title} className="w-24 h-24 object-contain mb-3" />
+                        <Image src={imageUrl} alt={data.title} width={96} height={96} className="object-contain mb-3" />
                         <p className="text-[#F97316] font-semibold text-lg mb-4">{data.title}</p>
 
                         {!isEditing && (

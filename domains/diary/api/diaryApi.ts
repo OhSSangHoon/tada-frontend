@@ -2,36 +2,30 @@ import { apiClient } from "@/shared/lib/api-client";
 import type {
     CanCreateResponse,
     CreateDiaryRequest,
-    DiaryDetail,
-    GenerateStickerResult,
-    GenerateTitleResult,
+    DiaryResponse,
+    GenerateStickerResponse,
+    GenerateTitleResponse,
     UpdateDiaryRequest,
 } from "@/domains/diary/types/diary";
 
-// TEMP: 진경의 api-client.ts 인증 헤더 자동 첨부가 아직 없어서, 로컬 테스트용으로만 .env.local의
-// NEXT_PUBLIC_DEV_TOKEN을 붙임 (.env.local은 git에 안 올라감). 진경 쪽 구현되면 이 블록 삭제.
-const devAuthHeader = process.env.NEXT_PUBLIC_DEV_TOKEN
-    ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_DEV_TOKEN}` }
-    : undefined;
-
 export async function checkCanCreate(date: string): Promise<CanCreateResponse> {
-    return apiClient<CanCreateResponse>(`/api/diaries/can-create?date=${date}`, { headers: devAuthHeader });
+    return apiClient<CanCreateResponse>(`/api/diaries/can-create?date=${date}`);
 }
 
-export async function getDiary(id: string): Promise<DiaryDetail> {
-    return apiClient<DiaryDetail>(`/api/diaries/${id}`, { headers: devAuthHeader });
+export async function getDiary(id: string): Promise<DiaryResponse> {
+    return apiClient<DiaryResponse>(`/api/diaries/${id}`);
 }
 
-export async function createDiary(payload: CreateDiaryRequest): Promise<DiaryDetail> {
-    return apiClient<DiaryDetail>("/api/diaries", { method: "POST", body: payload, headers: devAuthHeader });
+export async function createDiary(payload: CreateDiaryRequest): Promise<DiaryResponse> {
+    return apiClient<DiaryResponse>("/api/diaries", { method: "POST", body: payload });
 }
 
-export async function updateDiary(id: string, payload: UpdateDiaryRequest): Promise<DiaryDetail> {
-    return apiClient<DiaryDetail>(`/api/diaries/${id}`, { method: "PUT", body: payload, headers: devAuthHeader });
+export async function updateDiary(id: string, payload: UpdateDiaryRequest): Promise<DiaryResponse> {
+    return apiClient<DiaryResponse>(`/api/diaries/${id}`, { method: "PUT", body: payload });
 }
 
 export async function trashDiary(id: string): Promise<void> {
-    return apiClient<void>(`/api/diaries/${id}`, { method: "DELETE", headers: devAuthHeader });
+    return apiClient<void>(`/api/diaries/${id}`, { method: "DELETE" });
 }
 
 // mock 스티커 이미지 — 실제 생성 연동 전까지 public/stickers/의 임시 이미지로 대체
@@ -59,7 +53,7 @@ function mockStickerImageUrl(excludeImageUrl?: string): string {
 }
 
 // mock — generate-title 백엔드 미구현이라 본문에서 간단히 흉내만 냄
-export async function generateTitle(content: string): Promise<GenerateTitleResult> {
+export async function generateTitle(content: string): Promise<GenerateTitleResponse> {
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const trimmed = content.trim().slice(0, 20) || "오늘의 기록";
@@ -72,7 +66,7 @@ export async function generateTitle(content: string): Promise<GenerateTitleResul
 }
 
 // mock — generate-sticker/regenerate-sticker 백엔드 미구현
-export async function generateSticker(keyword: string, excludeImageUrl?: string): Promise<GenerateStickerResult> {
+export async function generateSticker(keyword: string, excludeImageUrl?: string): Promise<GenerateStickerResponse> {
     await new Promise((resolve) => setTimeout(resolve, 1200));
 
     return { imageUrl: mockStickerImageUrl(excludeImageUrl) };
