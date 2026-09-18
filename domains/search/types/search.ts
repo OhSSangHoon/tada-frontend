@@ -23,3 +23,6 @@ export interface SpringPage<T> {
 }
 
 export type SearchResultPage = SpringPage<SearchResultResponse>;
+
+// SearchController의 sort 쿼리 파라미터와 1:1 매핑 (기본값: latest)
+export type SearchSortOption = "latest" | "oldest";
