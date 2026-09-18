@@ -1,6 +1,5 @@
-"use client";
-
 import type { SearchResultResponse } from "@/domains/search/types/search";
+import Image from "next/image";
 
 interface SearchResultListProps {
   results: SearchResultResponse[];
@@ -24,7 +23,7 @@ function highlightKeyword(text: string, keyword: string) {
   const parts = text.split(new RegExp(`(${escapeRegExp(keyword)})`, "gi"));
 
   return parts.map((part, i) =>
-    part.toLowerCase() === keyword.toLocaleLowerCase() ? (
+    part.toLowerCase() === keyword.toLowerCase() ? (
       <mark key={i} className="rounded bg-yellow-200 px-0.5 text-inherit">
         {part}
       </mark>
@@ -41,9 +40,11 @@ export function SearchResultList({ results, keyword }: SearchResultListProps) {
         <li key={item.id} className="flex gap-3 px-4 py-3 hover:bg-gray-50">
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-orange-50">
             {item.stickerImageUrl ? (
-              <img
+              <Image
                 src={item.stickerImageUrl}
                 alt=""
+                width={40}
+                height={40}
                 className="h-full w-full object-cover"
               />
             ) : (

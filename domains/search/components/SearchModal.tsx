@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearch } from "@/domains/search/hooks/useSearch";
+import { useSearch, MAX_QUERY_LENGTH } from "@/domains/search/hooks/useSearch";
 import { SearchResultList } from "@/domains/search/components/SearchResultList";
 import { Pagination } from "@/domains/search/components/Pagination";
 import { ApiError } from "@/shared/lib/api-client";
@@ -67,6 +67,8 @@ if (!isOpen) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="산책, 밤하늘, 비오는날"
+          maxLength={MAX_QUERY_LENGTH}
+          autoFocus
           className="flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-orange-400"
         />
         <button

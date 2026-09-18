@@ -1,5 +1,3 @@
-"use client";
-
 interface PaginationProps {
   currentPage: number; // 0-base
   totalPages: number;
