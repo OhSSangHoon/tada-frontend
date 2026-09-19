@@ -3,7 +3,12 @@
 import { FormEvent, useState } from "react";
 import { useLogin } from "@/domains/auth/hooks/useLogin";
 
-export function LoginForm() {
+// 로그인 성공 후 실행할 함수를 부모에게서 전달받는다.
+interface LoginFormProps {
+  onSuccess: () => void;
+}
+
+export function LoginForm({ onSuccess }: LoginFormProps) {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
 
@@ -13,11 +18,16 @@ export function LoginForm() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    loginMutation.mutate({
-      loginId,
-      password,
-    });
-  };
+    loginMutation.mutate(
+      {
+        loginId,
+        password,
+      },
+      {
+        // 로그인 성공 시 부모가 전달한 함수를 실행한다.
+        onSuccess,
+      }
+    );}
 
   return (
     <form onSubmit={handleSubmit}>
@@ -58,4 +68,4 @@ export function LoginForm() {
       )}
     </form>
   );
-}
+    }

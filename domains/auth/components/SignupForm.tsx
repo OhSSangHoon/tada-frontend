@@ -3,12 +3,18 @@
 import { FormEvent, useState } from "react";
 import { useSignup } from "@/domains/auth/hooks/useSignup";
 
-export function SignupForm() {
+// 회원가입 성공 후 실행할 함수를 부모에게서 전달받는다.
+interface SignupFormProps {
+  onSuccess: () => void;
+}
+export function SignupForm({ onSuccess }: SignupFormProps) {
   // 회원가입 폼 입력값을 관리한다.
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
+
+
 
   // 회원가입 API 요청 상태를 관리한다.
   const signupMutation = useSignup();
@@ -23,12 +29,18 @@ export function SignupForm() {
     }
 
     // 입력한 값을 회원가입 요청으로 전달한다.
-    signupMutation.mutate({
-      loginId,
-      password,
-      passwordConfirm,
-      nickname,
-    });
+    signupMutation.mutate(
+      {
+        loginId,
+        password,
+        passwordConfirm,
+        nickname,
+      },
+      {
+        // 회원가입 성공 시 부모가 전달한 함수를 실행한다.
+        onSuccess,
+      }
+    );
   };
 
   return (
