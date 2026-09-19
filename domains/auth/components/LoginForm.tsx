@@ -45,10 +45,7 @@ export function LoginForm() {
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loginMutation.isPending}
-      >
+      <button type="submit" disabled={loginMutation.isPending}>
         {loginMutation.isPending ? "로그인 중..." : "로그인"}
       </button>
 

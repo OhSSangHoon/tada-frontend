@@ -107,34 +107,34 @@ export function SearchModal() {
       )}
 
       <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
-  <span className="text-sm font-medium text-gray-700">검색 내용</span>
-  {hasSearched && (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={() => changeSort("latest")}
-        className={
-          sort === "latest"
-            ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
-            : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
-        }
-      >
-        최신순
-      </button>
-      <button
-        type="button"
-        onClick={() => changeSort("oldest")}
-        className={
-          sort === "oldest"
-            ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
-            : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
-        }
-      >
-        오래된순
-      </button>
-    </div>
-  )}
-</div>
+        <span className="text-sm font-medium text-gray-700">검색 내용</span>
+        {hasSearched && (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => changeSort("latest")}
+              className={
+                sort === "latest"
+                  ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
+                  : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
+              }
+            >
+              최신순
+            </button>
+            <button
+              type="button"
+              onClick={() => changeSort("oldest")}
+              className={
+                sort === "oldest"
+                  ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
+                  : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
+              }
+            >
+              오래된순
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="flex-1 overflow-y-auto">
         {!hasSearched && !validationError && (

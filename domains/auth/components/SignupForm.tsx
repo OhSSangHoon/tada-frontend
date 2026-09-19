@@ -96,9 +96,7 @@ export function SignupForm() {
       )}
 
       {/* 회원가입 성공 시 메시지 표시 */}
-      {signupMutation.isSuccess && (
-        <p>회원가입이 완료되었습니다.</p>
-      )}
+      {signupMutation.isSuccess && <p>회원가입이 완료되었습니다.</p>}
 
       {/* 회원가입 실패 시 백엔드 에러 메시지 표시 */}
       {signupMutation.isError && (

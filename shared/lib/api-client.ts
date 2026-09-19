@@ -15,7 +15,10 @@ import {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, message: string) {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
     super(message);
     this.name = "ApiError";
   }
@@ -64,7 +67,7 @@ async function reissueAccessToken(): Promise<string | null> {
 
 export async function apiClient<T>(
   path: string,
-  { body, headers, ...options }: ApiClientOptions = {}
+  { body, headers, ...options }: ApiClientOptions = {},
 ): Promise<T> {
   const accessToken = getAccessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -75,9 +78,7 @@ export async function apiClient<T>(
       ...headers,
 
       // 진경 담당: Access Token이 있으면 Authorization 헤더에 추가
-      ...(accessToken
-        ? { Authorization: `Bearer ${accessToken}` }
-        : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -106,12 +107,10 @@ export async function apiClient<T>(
             ...headers,
             Authorization: `Bearer ${newAccessToken}`,
           },
-          body:
-            body === undefined ? undefined : JSON.stringify(body),
+          body: body === undefined ? undefined : JSON.stringify(body),
         });
 
-        const retryResult: ApiResponse<T> =
-          await retryResponse.json();
+        const retryResult: ApiResponse<T> = await retryResponse.json();
 
         if (retryResponse.ok && retryResult.success) {
           return retryResult.data as T;
@@ -125,7 +124,7 @@ export async function apiClient<T>(
 
         throw new ApiError(
           retryResponse.status,
-          retryResult.message ?? "요청에 실패했습니다."
+          retryResult.message ?? "요청에 실패했습니다.",
         );
       }
 
@@ -137,7 +136,7 @@ export async function apiClient<T>(
     // 403은 로그아웃하지 않고 그대로 에러 처리
     throw new ApiError(
       response.status,
-      result.message ?? "요청에 실패했습니다."
+      result.message ?? "요청에 실패했습니다.",
     );
   }
 
