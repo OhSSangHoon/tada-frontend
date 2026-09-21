@@ -10,14 +10,12 @@ export function useLogout() {
   return useMutation({
     mutationFn: logout,
 
-    onSuccess: () => {
-      // Access Token은 메모리에서 삭제한다.
+    // 서버 로그아웃 성공 여부와 관계없이
+    // 클라이언트의 로그인 상태는 정리한다.
+    onSettled: () => {
       clearAccessToken();
-
-      // Refresh Token은 sessionStorage에서 삭제한다.
       clearRefreshToken();
 
-      // 이전 로그인 사용자의 정보를 캐시에서 제거한다.
       queryClient.removeQueries({
         queryKey: ["auth", "me"],
       });
