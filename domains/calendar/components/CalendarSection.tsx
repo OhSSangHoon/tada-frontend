@@ -111,14 +111,14 @@ export function CalendarSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white shadow-xl p-8 w-[820px] h-[920px] mx-auto flex items-center justify-center">
+      <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
       </div>
     );
   }
   if (isError) {
     return (
-      <div className="bg-white shadow-xl p-8 w-[820px] h-[920px] mx-auto flex items-center justify-center text-sm text-gray-500">
+      <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center text-sm text-gray-500">
         불러오기 실패
       </div>
     );
@@ -136,7 +136,7 @@ export function CalendarSection() {
 
   return (
     <>
-      <div className="relative bg-white shadow-xl p-8 w-[820px] h-[920px] mx-auto">
+      <div className="relative bg-white shadow-xl p-8 w-205 h-230 mx-auto">
         <div className="flex justify-between items-center mb-6">
           <span
             className="text-[#F97316] leading-none"

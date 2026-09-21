@@ -109,7 +109,7 @@ export function DiaryDetailModal({
       onClick={handleRequestClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-xl w-[520px] p-8 relative"
+        className="bg-white rounded-3xl shadow-xl w-130 p-8 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
