@@ -5,18 +5,14 @@ import Image from "next/image";
 import { useCreateDiary } from "@/domains/diary/hooks/useCreateDiary";
 import { useGenerateSticker } from "@/domains/diary/hooks/useGenerateSticker";
 import { useGenerateTitle } from "@/domains/diary/hooks/useGenerateTitle";
+import { ConfirmModal } from "@/domains/diary/components/ConfirmModal";
+import { formatDisplayDate } from "@/domains/diary/utils/date";
+import { DIARY_FONT } from "@/domains/diary/utils/fonts";
 
 type Step = "content" | "keyword" | "loading" | "result";
 
 const WEATHER_OPTIONS = ["☀️ 맑음", "☁️ 흐림", "🌧️ 비", "❄️ 눈"];
-const WEEKDAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 const TITLE_MAX_LENGTH = 20;
-
-function formatDisplayDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  return `${m}월 ${d}일 ${WEEKDAY_NAMES[date.getDay()]}요일`;
-}
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "요청에 실패했습니다.";
@@ -178,7 +174,7 @@ export function DiaryWriteModal({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="오늘 하루는 어땠나요?"
-              className="w-full h-64 border rounded-2xl p-4 text-sm resize-none mb-6"
+              className={`w-full h-64 border rounded-2xl p-4 text-base resize-none mb-6 ${DIARY_FONT}`}
             />
             <div className="flex gap-3">
               <button
@@ -208,7 +204,7 @@ export function DiaryWriteModal({
                 setTitle(e.target.value.slice(0, TITLE_MAX_LENGTH))
               }
               maxLength={TITLE_MAX_LENGTH}
-              className="w-full border rounded-xl text-center text-[#F97316] font-semibold text-lg py-3 mb-4"
+              className={`w-full border rounded-xl text-center text-[#F97316] font-bold text-xl py-3 mb-4 ${DIARY_FONT}`}
             />
             <p className="text-center text-sm text-gray-600 mb-6">
               스티커로 만들고 싶은 키워드를 선택해주세요.
@@ -248,7 +244,11 @@ export function DiaryWriteModal({
               height={112}
               className="object-contain mb-4"
             />
-            <p className="text-[#F97316] font-semibold text-lg mb-6">{title}</p>
+            <p
+              className={`text-[#F97316] font-bold text-xl mb-6 ${DIARY_FONT}`}
+            >
+              {title}
+            </p>
             {!hasRegenerated && (
               <button
                 onClick={handleRegenerate}
@@ -268,27 +268,20 @@ export function DiaryWriteModal({
         )}
 
         {showCloseConfirm && (
-          <div className="absolute inset-0 bg-white/95 rounded-3xl flex flex-col items-center justify-center p-8">
-            <p className="text-center text-sm text-gray-700 mb-6">
-              지금 취소하면 작성하고 있던 일기가 초기화됩니다.
-              <br />
-              정말 취소하시겠습니까?
-            </p>
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={onClose}
-                className="flex-1 bg-red-500 text-white rounded-full py-3 font-medium cursor-pointer"
-              >
-                예
-              </button>
-              <button
-                onClick={() => setShowCloseConfirm(false)}
-                className="flex-1 bg-[#FFEDD5] text-[#F97316] rounded-full py-3 font-medium cursor-pointer"
-              >
-                아니오
-              </button>
-            </div>
-          </div>
+          <ConfirmModal
+            message={
+              <>
+                지금 취소하면 작성하고 있던 일기가 초기화됩니다.
+                <br />
+                정말 취소하시겠습니까?
+              </>
+            }
+            confirmLabel="예"
+            cancelLabel="아니오"
+            isPending={false}
+            onConfirm={onClose}
+            onCancel={() => setShowCloseConfirm(false)}
+          />
         )}
       </div>
     </div>
