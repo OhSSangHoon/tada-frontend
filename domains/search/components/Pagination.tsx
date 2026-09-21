@@ -2,9 +2,11 @@ interface PaginationProps {
   currentPage: number; // 0-base
   totalPages: number;
   onPageChange: (page: number) => void;
+  ariaLabel?: string;
 }
 
 const MAX_VISIBLE_PAGES = 5;
+const DEFAULT_ARIA_LABEL = "검색 결과 페이지네이션";
 
 function getVisiblePages(current: number, total: number): number[] {
   if (total <= MAX_VISIBLE_PAGES) {
@@ -51,6 +53,7 @@ export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
+  ariaLabel = DEFAULT_ARIA_LABEL,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -61,7 +64,7 @@ export function Pagination({
   return (
     <nav
       className="flex items-center justify-center gap-1 py-2"
-      aria-label="검색 결과 페이지네이션"
+      aria-label={ariaLabel}
     >
       <button
         type="button"
