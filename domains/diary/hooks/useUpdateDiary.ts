@@ -7,8 +7,9 @@ export function useUpdateDiary(id: string) {
 
   return useMutation({
     mutationFn: (payload: UpdateDiaryRequest) => updateDiary(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["diary", id] });
+    onSuccess: (updated) => {
+      // 저장 응답으로 바로 갱신해서, 조회 화면이 다시 불러오는 동안 이전 내용으로 보이지 않게 한다
+      queryClient.setQueryData(["diary", id], updated);
       queryClient.invalidateQueries({ queryKey: ["calendar"] });
     },
   });

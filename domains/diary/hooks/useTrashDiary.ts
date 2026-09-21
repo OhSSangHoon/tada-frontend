@@ -8,6 +8,7 @@ export function useTrashDiary() {
     mutationFn: (id: string) => trashDiary(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["trash"] });
     },
   });
 }
