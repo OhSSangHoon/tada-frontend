@@ -2,8 +2,16 @@
 
 import { useState, type FormEvent } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { searchDiaries, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_SORT } from "@/domains/search/api/searchApi";
-import type { SearchResultPage, SearchSortOption } from "@/domains/search/types/search";
+import {
+  searchDiaries,
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_SORT,
+} from "@/domains/search/api/searchApi";
+import type {
+  SearchResultPage,
+  SearchSortOption,
+} from "@/domains/search/types/search";
 import type { ApiError } from "@/shared/lib/api-client";
 
 export const MAX_QUERY_LENGTH = 20;
@@ -15,10 +23,18 @@ export function useSearch() {
   const [sort, setSort] = useState<SearchSortOption>(DEFAULT_SORT);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const { data,isLoading, isFetching, isError, error, refetch } = useQuery<SearchResultPage, ApiError>({
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery<
+    SearchResultPage,
+    ApiError
+  >({
     queryKey: ["search", submittedQuery, page, sort],
     queryFn: () =>
-      searchDiaries({ query: submittedQuery, page, size: DEFAULT_PAGE_SIZE, sort }),
+      searchDiaries({
+        query: submittedQuery,
+        page,
+        size: DEFAULT_PAGE_SIZE,
+        sort,
+      }),
     enabled: submittedQuery.length > 0,
     placeholderData: keepPreviousData,
   });
@@ -34,22 +50,24 @@ export function useSearch() {
     }
 
     if (trimmed.length > MAX_QUERY_LENGTH) {
-      setValidationError(`검색어는 ${MAX_QUERY_LENGTH}자 이내로 입력해 주세요.`);
+      setValidationError(
+        `검색어는 ${MAX_QUERY_LENGTH}자 이내로 입력해 주세요.`,
+      );
       return;
     }
-    
+
     setValidationError(null);
     setPage(DEFAULT_PAGE);
     setSubmittedQuery(trimmed);
-  }
+  };
 
-const goToPage = (nextPage: number) => setPage(nextPage);
-  
-// 정렬 옵션 변경 시 페이지는 0으로 리셋
-const changeSort = (nextSort: SearchSortOption) => {
-  setSort(nextSort);
-  setPage(DEFAULT_PAGE);
-};
+  const goToPage = (nextPage: number) => setPage(nextPage);
+
+  // 정렬 옵션 변경 시 페이지는 0으로 리셋
+  const changeSort = (nextSort: SearchSortOption) => {
+    setSort(nextSort);
+    setPage(DEFAULT_PAGE);
+  };
 
   const reset = () => {
     setInputValue("");

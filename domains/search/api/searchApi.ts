@@ -1,5 +1,8 @@
 import { apiClient } from "@/shared/lib/api-client";
-import type { SearchResultPage, SearchSortOption } from "@/domains/search/types/search";
+import type {
+  SearchResultPage,
+  SearchSortOption,
+} from "@/domains/search/types/search";
 
 interface SearchParams {
   query: string;
@@ -19,7 +22,7 @@ export function searchDiaries({
   page = DEFAULT_PAGE,
   size = DEFAULT_PAGE_SIZE,
   sort = DEFAULT_SORT,
- }: SearchParams) {
+}: SearchParams) {
   const params = new URLSearchParams({
     query,
     page: String(page),
@@ -28,5 +31,4 @@ export function searchDiaries({
   });
 
   return apiClient<SearchResultPage>(`/api/search?${params.toString()}`);
-
 }

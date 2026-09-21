@@ -40,8 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# md
-tada_directory_structure.md
-frontend_directory_structure.md
-
+# markdown (팀 결정: md 파일은 공유하지 않음)
 *.md
+
+# IDE
+.idea/
