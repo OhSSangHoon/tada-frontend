@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type DragEvent } from "react";
-import { TrashIcon } from "@/domains/diary/components/TrashIcon";
+import { TrashIcon } from "@/shared/components/TrashIcon";
 
 interface TrashDropZoneProps {
   onDropDiary: () => void;

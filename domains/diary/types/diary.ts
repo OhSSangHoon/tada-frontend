@@ -41,8 +41,9 @@ export interface UpdateDiaryRequest {
   title: string;
   weather: string | null;
   content: string;
-  // 본문을 바꿔 저장할 때 백엔드가 필수로 요구함 (제목/날씨만 바꿀 땐 무시됨)
-  extractionResult: ExtractionResult;
+  // 새로 추출한 인물/장소/활동. 보내지 않으면 기존 추출 결과를 그대로 유지한다.
+  // 빈 값을 보내면 기존 인물/장소/활동이 전부 지워지므로, AI 재추출 연동 전에는 보내지 않는다.
+  extractionResult?: ExtractionResult;
 }
 
 // mock — generate-title 백엔드 미구현(5주차 예정)이라 프론트에서 흉내만 냄

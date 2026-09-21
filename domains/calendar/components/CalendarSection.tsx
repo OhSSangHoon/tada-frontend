@@ -6,7 +6,7 @@ import { useCalendar } from "@/domains/calendar/hooks/useCalendar";
 import { useCanCreate } from "@/domains/diary/hooks/useCanCreate";
 import { useTrashDiary } from "@/domains/diary/hooks/useTrashDiary";
 import { TrashDropZone } from "@/domains/calendar/components/TrashDropZone";
-import { ConfirmModal } from "@/domains/diary/components/ConfirmModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { DiaryWriteModal } from "@/domains/diary/components/DiaryWriteModal";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
 import type { CalendarResponseItem } from "@/domains/calendar/types/calendar";

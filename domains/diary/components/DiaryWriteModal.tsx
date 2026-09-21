@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useCreateDiary } from "@/domains/diary/hooks/useCreateDiary";
 import { useGenerateSticker } from "@/domains/diary/hooks/useGenerateSticker";
 import { useGenerateTitle } from "@/domains/diary/hooks/useGenerateTitle";
-import { ConfirmModal } from "@/domains/diary/components/ConfirmModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { formatDisplayDate } from "@/domains/diary/utils/date";
 import { DIARY_FONT } from "@/domains/diary/utils/fonts";
 

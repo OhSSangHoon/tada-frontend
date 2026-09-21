@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTrashedDiaries } from "@/domains/diary/hooks/useTrashedDiaries";
 import { useRestoreDiary } from "@/domains/diary/hooks/useRestoreDiary";
 import { useHasDiaryOnDate } from "@/domains/calendar/hooks/useHasDiaryOnDate";
-import { ConfirmModal } from "@/domains/diary/components/ConfirmModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   SidePanelBody,
   SidePanelHeader,

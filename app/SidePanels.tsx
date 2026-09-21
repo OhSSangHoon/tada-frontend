@@ -1,6 +1,6 @@
 "use client";
 
-import { TrashIcon } from "@/domains/diary/components/TrashIcon";
+import { TrashIcon } from "@/shared/components/TrashIcon";
 import { TrashPanel } from "@/domains/diary/components/TrashPanel";
 import { SidePanelRail } from "@/shared/components/side-panel/SidePanelRail";
 import { SidePanelPlaceholder } from "@/shared/components/side-panel/SidePanelParts";

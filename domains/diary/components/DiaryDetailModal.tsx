@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useDiary } from "@/domains/diary/hooks/useDiary";
 import { useUpdateDiary } from "@/domains/diary/hooks/useUpdateDiary";
 import { useTrashDiary } from "@/domains/diary/hooks/useTrashDiary";
-import { ConfirmModal } from "@/domains/diary/components/ConfirmModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { formatDisplayDate } from "@/domains/diary/utils/date";
 import { DIARY_FONT } from "@/domains/diary/utils/fonts";
 
@@ -80,13 +80,7 @@ export function DiaryDetailModal({
 
   async function handleSave() {
     try {
-      await updateDiaryMutation.mutateAsync({
-        title,
-        weather,
-        content,
-        // mock — n8n 재추출 연동 전까지는 항상 빈 값 (작성 모달과 동일)
-        extractionResult: { persons: [], places: [], activities: [] },
-      });
+      await updateDiaryMutation.mutateAsync({ title, weather, content });
       setIsEditing(false);
     } catch (error) {
       alert(errorMessage(error));
