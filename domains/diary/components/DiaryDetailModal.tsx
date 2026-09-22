@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useDiary } from "@/domains/diary/hooks/useDiary";
 import { useUpdateDiary } from "@/domains/diary/hooks/useUpdateDiary";
 import { useTrashDiary } from "@/domains/diary/hooks/useTrashDiary";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { formatDisplayDate } from "@/domains/diary/utils/date";
+import { DIARY_FONT } from "@/domains/diary/utils/fonts";
 
 const WEATHER_OPTIONS = ["☀️ 맑음", "☁️ 흐림", "🌧️ 비", "❄️ 눈"];
 
@@ -33,6 +36,17 @@ export function DiaryDetailModal({
   const [content, setContent] = useState("");
   const [showWeatherPicker, setShowWeatherPicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [discardTarget, setDiscardTarget] = useState<
+    "close" | "cancelEdit" | null
+  >(null);
+
+  // 수정 화면에서 원본과 달라진 내용이 있을 때만 닫기/취소 전에 경고한다
+  const isDirty =
+    isEditing &&
+    !!data &&
+    (title !== data.title ||
+      weather !== data.weather ||
+      content !== data.content);
 
   function startEditing() {
     if (!data) return;
@@ -40,6 +54,28 @@ export function DiaryDetailModal({
     setWeather(data.weather);
     setContent(data.content);
     setIsEditing(true);
+  }
+
+  function handleRequestClose() {
+    if (isDirty) {
+      setDiscardTarget("close");
+      return;
+    }
+    onClose();
+  }
+
+  function handleRequestCancelEdit() {
+    if (isDirty) {
+      setDiscardTarget("cancelEdit");
+      return;
+    }
+    setIsEditing(false);
+  }
+
+  function handleConfirmDiscard() {
+    if (discardTarget === "close") onClose();
+    else setIsEditing(false);
+    setDiscardTarget(null);
   }
 
   async function handleSave() {
@@ -64,14 +100,14 @@ export function DiaryDetailModal({
   return (
     <div
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-      onClick={onClose}
+      onClick={handleRequestClose}
     >
       <div
         className="bg-white rounded-3xl shadow-xl w-130 p-8 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={onClose}
+          onClick={handleRequestClose}
           className="absolute top-6 right-6 text-[#F97316] text-2xl leading-none cursor-pointer"
           aria-label="닫기"
         >
@@ -79,9 +115,9 @@ export function DiaryDetailModal({
         </button>
 
         {isLoading && (
-          <p className="text-center py-10 text-sm text-gray-500">
-            불러오는 중...
-          </p>
+          <div className="flex justify-center py-16">
+            <div className="w-12 h-12 border-4 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
+          </div>
         )}
         {isError && (
           <p className="text-center py-10 text-sm text-gray-500">
@@ -98,7 +134,9 @@ export function DiaryDetailModal({
               height={96}
               className="object-contain mb-3"
             />
-            <p className="text-[#F97316] font-semibold text-lg mb-4">
+            <p
+              className={`text-[#F97316] font-bold text-xl mb-4 ${DIARY_FONT}`}
+            >
               {data.title}
             </p>
 
@@ -106,7 +144,7 @@ export function DiaryDetailModal({
               <>
                 <div className="flex gap-2 mb-4">
                   <span className="bg-[#F97316] text-white rounded-full px-4 py-2 text-sm">
-                    {data.entryDate}
+                    {formatDisplayDate(data.entryDate)}
                   </span>
                   {data.weather && (
                     <span className="bg-gray-100 text-gray-700 rounded-full px-4 py-2 text-sm">
@@ -114,7 +152,9 @@ export function DiaryDetailModal({
                     </span>
                   )}
                 </div>
-                <div className="w-full border rounded-2xl p-4 text-sm mb-6 max-h-56 overflow-y-auto whitespace-pre-wrap">
+                <div
+                  className={`w-full border rounded-2xl p-4 text-base mb-6 max-h-56 overflow-y-auto whitespace-pre-wrap ${DIARY_FONT}`}
+                >
                   {data.content}
                 </div>
                 <div className="flex gap-3 w-full">
@@ -140,7 +180,7 @@ export function DiaryDetailModal({
                   value={title}
                   onChange={(e) => setTitle(e.target.value.slice(0, 20))}
                   maxLength={20}
-                  className="w-full border rounded-xl text-center font-medium py-2 mb-3"
+                  className={`w-full border rounded-xl text-center font-bold text-xl py-2 mb-3 ${DIARY_FONT}`}
                 />
                 <div className="relative inline-block mb-3">
                   <button
@@ -178,7 +218,7 @@ export function DiaryDetailModal({
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-48 border rounded-2xl p-4 text-sm resize-none mb-6"
+                  className={`w-full h-48 border rounded-2xl p-4 text-base resize-none mb-6 ${DIARY_FONT}`}
                 />
                 <div className="flex gap-3">
                   <button
@@ -189,7 +229,7 @@ export function DiaryDetailModal({
                     저장
                   </button>
                   <button
-                    onClick={() => setIsEditing(false)}
+                    onClick={handleRequestCancelEdit}
                     className="flex-1 bg-[#FFEDD5] text-[#F97316] rounded-full py-3 font-medium cursor-pointer"
                   >
                     취소
@@ -200,29 +240,43 @@ export function DiaryDetailModal({
           </div>
         )}
 
+        {discardTarget && (
+          <ConfirmModal
+            message={
+              <>
+                지금 {discardTarget === "close" ? "닫으면" : "취소하면"} 수정
+                중인 내용이 초기화됩니다.
+                <br />
+                정말{" "}
+                {discardTarget === "close"
+                  ? "닫으시겠습니까"
+                  : "취소하시겠습니까"}
+                ?
+              </>
+            }
+            confirmLabel="예"
+            cancelLabel="아니오"
+            isPending={false}
+            onConfirm={handleConfirmDiscard}
+            onCancel={() => setDiscardTarget(null)}
+          />
+        )}
+
         {showDeleteConfirm && (
-          <div className="absolute inset-0 bg-white/95 rounded-3xl flex flex-col items-center justify-center p-8">
-            <p className="text-center text-sm text-gray-700 mb-6">
-              이 일기를 삭제하면 휴지통으로 이동합니다.
-              <br />
-              정말 삭제하시겠습니까?
-            </p>
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={handleConfirmDelete}
-                disabled={trashDiaryMutation.isPending}
-                className="flex-1 bg-red-500 text-white rounded-full py-3 font-medium disabled:opacity-40 cursor-pointer"
-              >
-                예
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 bg-[#FFEDD5] text-[#F97316] rounded-full py-3 font-medium cursor-pointer"
-              >
-                아니오
-              </button>
-            </div>
-          </div>
+          <ConfirmModal
+            message={
+              <>
+                이 일기를 삭제하면 휴지통으로 이동합니다.
+                <br />
+                정말 삭제하시겠습니까?
+              </>
+            }
+            confirmLabel="예"
+            cancelLabel="아니오"
+            isPending={trashDiaryMutation.isPending}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
         )}
       </div>
     </div>

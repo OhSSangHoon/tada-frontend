@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import Image from "next/image";
 import { useCalendar } from "@/domains/calendar/hooks/useCalendar";
 import { useCanCreate } from "@/domains/diary/hooks/useCanCreate";
+import { useTrashDiary } from "@/domains/diary/hooks/useTrashDiary";
+import { TrashDropZone } from "@/domains/calendar/components/TrashDropZone";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { DiaryWriteModal } from "@/domains/diary/components/DiaryWriteModal";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
 import type { CalendarResponseItem } from "@/domains/calendar/types/calendar";
@@ -18,13 +21,49 @@ const TODAY_STR = `${today.getFullYear()}-${String(today.getMonth() + 1).padStar
 const CURRENT_YEAR = today.getFullYear();
 const YEAR_RANGE = 20;
 
+// 기본 드래그 이미지는 object-contain을 무시하고 칸 크기로 늘려 그려서, 칸 안에 보이는 비율 그대로 직접 만든다
+function setStickerDragImage(e: DragEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  if (!img.naturalWidth) return;
+
+  const style = getComputedStyle(img);
+  const boxWidth =
+    img.clientWidth -
+    parseFloat(style.paddingLeft) -
+    parseFloat(style.paddingRight);
+  const boxHeight =
+    img.clientHeight -
+    parseFloat(style.paddingTop) -
+    parseFloat(style.paddingBottom);
+  const scale = Math.min(
+    boxWidth / img.naturalWidth,
+    boxHeight / img.naturalHeight,
+  );
+  const width = Math.round(img.naturalWidth * scale);
+  const height = Math.round(img.naturalHeight * scale);
+
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.cssText = `position:fixed;top:-1000px;left:-1000px;width:${width}px;height:${height}px`;
+  canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+  document.body.appendChild(canvas);
+
+  e.dataTransfer.setDragImage(canvas, width / 2, height / 2);
+  setTimeout(() => canvas.remove(), 0);
+}
+
 export function CalendarSection() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [modal, setModal] = useState<ModalState>(null);
+  const [draggingDiaryId, setDraggingDiaryId] = useState<string | null>(null);
+  const [trashTargetId, setTrashTargetId] = useState<string | null>(null);
 
   const { data, isLoading, isError, isFetching } = useCalendar(year, month);
   const canCreateMutation = useCanCreate();
+  const trashDiaryMutation = useTrashDiary();
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
   const pendingDate = canCreateMutation.isPending
@@ -56,6 +95,16 @@ export function CalendarSection() {
     setModal({ type: "write", date: dateStr });
   }
 
+  async function handleConfirmTrash() {
+    if (!trashTargetId) return;
+    try {
+      await trashDiaryMutation.mutateAsync(trashTargetId);
+      setTrashTargetId(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "요청에 실패했습니다.");
+    }
+  }
+
   const itemsByDate = new Map(
     data?.map((item) => [item.entryDate, item]) ?? [],
   );
@@ -69,7 +118,7 @@ export function CalendarSection() {
   }
   if (isError) {
     return (
-      <div className="bg-white shadow-xl p-8 w-2059h-230auto flex items-center justify-center text-sm text-gray-500">
+      <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center text-sm text-gray-500">
         불러오기 실패
       </div>
     );
@@ -87,7 +136,7 @@ export function CalendarSection() {
 
   return (
     <>
-      <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto">
+      <div className="relative bg-white shadow-xl p-8 w-205 h-230 mx-auto">
         <div className="flex justify-between items-center mb-6">
           <span
             className="text-[#F97316] leading-none"
@@ -174,7 +223,18 @@ export function CalendarSection() {
                     src={item.imageUrl}
                     alt={item.keyword}
                     fill
-                    className="object-contain p-2.5"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", item.diaryId);
+                      setStickerDragImage(e);
+                      // 드래그 시작 직후에 상태를 바꿔야 브라우저가 드래그를 중단하지 않음
+                      setTimeout(() => setDraggingDiaryId(item.diaryId), 0);
+                    }}
+                    onDragEnd={() => setDraggingDiaryId(null)}
+                    className={`object-contain p-2.5 ${
+                      draggingDiaryId === item.diaryId ? "opacity-40" : ""
+                    }`}
                   />
                 ) : (
                   day
@@ -183,7 +243,31 @@ export function CalendarSection() {
             );
           })}
         </div>
+        {draggingDiaryId && (
+          <TrashDropZone
+            onDropDiary={() => {
+              setTrashTargetId(draggingDiaryId);
+              setDraggingDiaryId(null);
+            }}
+          />
+        )}
       </div>
+      {trashTargetId && (
+        <ConfirmModal
+          message={
+            <>
+              이 일기를 삭제하면 휴지통으로 이동합니다.
+              <br />
+              정말 삭제하시겠습니까?
+            </>
+          }
+          confirmLabel="예"
+          cancelLabel="아니오"
+          isPending={trashDiaryMutation.isPending}
+          onConfirm={handleConfirmTrash}
+          onCancel={() => setTrashTargetId(null)}
+        />
+      )}
       {modal?.type === "write" && (
         <DiaryWriteModal
           initialDate={modal.date}
