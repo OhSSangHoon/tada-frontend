@@ -10,8 +10,7 @@ import {
 } from "@/domains/sticker/api/stickerApi";
 import type { StickerSortOption } from "@/domains/sticker/types/sticker";
 
-export function useStickers() {
-  const [isOpen, setIsOpen] = useState(false);
+export function useStickers(isOpen: boolean) {
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [sort, setSort] = useState<StickerSortOption>(DEFAULT_SORT);
 
@@ -22,18 +21,12 @@ export function useStickers() {
     enabled: isOpen,
   });
 
-  const open = () => setIsOpen(true);
-  const close = () => setIsOpen(false);
-
   const changeSort = (next: StickerSortOption) => {
     setSort(next);
     setPage(DEFAULT_PAGE);
   };
 
   return {
-    isOpen,
-    open,
-    close,
     page,
     setPage,
     sort,
