@@ -3,11 +3,28 @@ import type { PersonTimelineItemResponse } from "@/domains/curator/types/curator
 
 interface PersonTimelineCardProps {
   item: PersonTimelineItemResponse;
+  onClick: () => void;
 }
 
-export function PersonTimelineCard({ item }: PersonTimelineCardProps) {
+export function PersonTimelineCard({ item, onClick }: PersonTimelineCardProps) {
+  function handleKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    onClick();
+  }
+
   return (
-    <article className="group flex min-h-[112px] gap-4 rounded-2xl border border-[#EFE7E2] bg-white px-4 py-4 transition hover:border-[#F6C9A9] hover:shadow-sm">
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={`${item.title} 일기 열기`}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      className="group flex min-h-[112px] cursor-pointer gap-4 rounded-2xl border border-[#EFE7E2] bg-white px-4 py-4 transition hover:border-[#F6C9A9] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]/40"
+    >
       <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl bg-[#FFF7ED] ring-1 ring-[#F4E6DC]">
         {item.stickerUrl ? (
           <Image

@@ -1,15 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import { PersonTimelineCard } from "@/domains/curator/components/PersonTimelineCard";
 import { usePersonTimeline } from "@/domains/curator/hooks/usePersonTimeline";
-import type { PersonTimelineSort } from "@/domains/curator/types/curator";
+import type {
+  PersonTimelineItemResponse,
+  PersonTimelineSort,
+} from "@/domains/curator/types/curator";
 
 interface PersonRecordTabProps {
   personId: string;
+  onDiaryOpen: (item: PersonTimelineItemResponse) => void;
 }
 
-export function PersonRecordTab({ personId }: PersonRecordTabProps) {
+export function PersonRecordTab({
+  personId,
+  onDiaryOpen,
+}: PersonRecordTabProps) {
   const [sort, setSort] = useState<PersonTimelineSort>("LATEST");
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -114,7 +122,10 @@ export function PersonRecordTab({ personId }: PersonRecordTabProps) {
               <div key={item.diaryId} className="relative pl-7">
                 <span className="absolute left-0 top-6 h-[13px] w-[13px] rounded-full border-[3px] border-white bg-[#F97316] ring-1 ring-[#F2C4A5]" />
 
-                <PersonTimelineCard item={item} />
+                <PersonTimelineCard
+                  item={item}
+                  onClick={() => onDiaryOpen(item)}
+                />
               </div>
             ))}
           </div>

@@ -4,8 +4,12 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
 import { PersonRecordTab } from "@/domains/curator/components/PersonRecordTab";
 import { usePersonDetail } from "@/domains/curator/hooks/usePersonDetail";
+import type { PersonTimelineItemResponse } from "@/domains/curator/types/curator";
+
+const FALLBACK_STICKER_IMAGE = "/stickers/goodday.png";
 
 interface PersonDetailModalProps {
   personId: string;
@@ -17,6 +21,8 @@ export function PersonDetailModal({
   onClose,
 }: PersonDetailModalProps) {
   const [isScrolling, setIsScrolling] = useState(false);
+  const [selectedDiary, setSelectedDiary] =
+    useState<PersonTimelineItemResponse | null>(null);
 
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -35,6 +41,12 @@ export function PersonDetailModal({
 
       event.preventDefault();
       event.stopImmediatePropagation();
+
+      if (selectedDiary) {
+        setSelectedDiary(null);
+        return;
+      }
+
       onClose();
     }
 
@@ -43,7 +55,7 @@ export function PersonDetailModal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [onClose]);
+  }, [onClose, selectedDiary]);
 
   useEffect(() => {
     return () => {
@@ -66,138 +78,151 @@ export function PersonDetailModal({
   }
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-6 backdrop-blur-[2px]"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl">
-        {isLoading ? (
-          <DetailSkeleton />
-        ) : isError || !person ? (
-          <DetailError onClose={onClose} onRetry={() => void refetch()} />
-        ) : (
-          <>
-            <header className="shrink-0 border-b border-[#F1ECE8] px-7 pb-6 pt-7">
-              <div className="flex items-start gap-5">
-                <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-[28px] bg-[#FFF7ED] ring-1 ring-[#F2E2D8]">
-                  {person.stickerUrl ? (
-                    <Image
-                      src={person.stickerUrl}
-                      alt=""
-                      fill
-                      sizes="88px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <PersonPlaceholder />
-                  )}
-                </div>
+    <>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-6 backdrop-blur-[2px]"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div className="flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl">
+          {isLoading ? (
+            <DetailSkeleton />
+          ) : isError || !person ? (
+            <DetailError onClose={onClose} onRetry={() => void refetch()} />
+          ) : (
+            <>
+              <header className="shrink-0 border-b border-[#F1ECE8] px-7 pb-6 pt-7">
+                <div className="flex items-start gap-5">
+                  <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-[28px] bg-[#FFF7ED] ring-1 ring-[#F2E2D8]">
+                    {person.stickerUrl ? (
+                      <Image
+                        src={person.stickerUrl}
+                        alt=""
+                        fill
+                        sizes="88px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <PersonPlaceholder />
+                    )}
+                  </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-[26px] font-bold tracking-[-0.02em] text-[#40312E]">
-                        {person.displayName}
-                        {getWaGwa(person.displayName)}의 기록
-                      </h2>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-[26px] font-bold tracking-[-0.02em] text-[#40312E]">
+                          {person.displayName}
+                          {getWaGwa(person.displayName)}의 기록
+                        </h2>
 
-                      <p className="mt-1 text-[13px] text-[#978D88]">
-                        일기에 남은 {person.displayName}
-                        {getWaGwa(person.displayName)} 함께한 순간들을
-                        모아봤어요.
-                      </p>
+                        <p className="mt-1 text-[13px] text-[#978D88]">
+                          일기에 남은 {person.displayName}
+                          {getWaGwa(person.displayName)} 함께한 순간들을
+                          모아봤어요.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        aria-label="사람 상세 닫기"
+                        onClick={onClose}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#776D68] transition hover:bg-[#FFF7ED] hover:text-[#F97316]"
+                      >
+                        <CloseIcon />
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      aria-label="사람 상세 닫기"
-                      onClick={onClose}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#776D68] transition hover:bg-[#FFF7ED] hover:text-[#F97316]"
-                    >
-                      <CloseIcon />
-                    </button>
-                  </div>
+                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[#857B76]">
+                      <StatText
+                        label="함께한 기록"
+                        value={`${person.mentionCount}개`}
+                      />
 
-                  <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[#857B76]">
-                    <StatText
-                      label="함께한 기록"
-                      value={`${person.mentionCount}개`}
-                    />
+                      <StatText
+                        label="첫 기록"
+                        value={formatNullableDate(person.firstMentionedAt)}
+                      />
 
-                    <StatText
-                      label="첫 기록"
-                      value={formatNullableDate(person.firstMentionedAt)}
-                    />
-
-                    <StatText
-                      label="최근 기록"
-                      value={formatNullableDate(person.lastMentionedAt)}
-                    />
+                      <StatText
+                        label="최근 기록"
+                        value={formatNullableDate(person.lastMentionedAt)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-5">
-                <KeywordSection
-                  title="함께한 장소"
-                  icon={<LocationIcon />}
-                  items={person.topPlaces}
+                <div className="mt-6 grid grid-cols-2 gap-5">
+                  <KeywordSection
+                    title="함께한 장소"
+                    icon={<LocationIcon />}
+                    items={person.topPlaces}
+                  />
+
+                  <KeywordSection
+                    title="함께한 활동"
+                    icon={<ActivityIcon />}
+                    items={person.topActivities}
+                  />
+                </div>
+              </header>
+
+              <nav
+                aria-label="사람 상세 탭"
+                className="shrink-0 border-b border-[#F1ECE8] px-7"
+              >
+                <div className="flex gap-8">
+                  <button
+                    type="button"
+                    className="border-b-[3px] border-[#F97316] px-1 py-4 text-[14px] font-bold text-[#F97316]"
+                  >
+                    기록
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled
+                    title="다음 단계에서 연결됩니다."
+                    className="cursor-not-allowed border-b-[3px] border-transparent px-1 py-4 text-[14px] font-semibold text-[#B8B0AC]"
+                  >
+                    추억
+                  </button>
+                </div>
+              </nav>
+
+              <div
+                onScroll={handleScroll}
+                className={`min-h-0 flex-1 overflow-auto px-7 py-6
+                  [&::-webkit-scrollbar]:w-2
+                  [&::-webkit-scrollbar-track]:bg-transparent
+                  [&::-webkit-scrollbar-thumb]:rounded-full
+                  ${
+                    isScrolling
+                      ? "[&::-webkit-scrollbar-thumb]:bg-[#A89E98]"
+                      : "[&::-webkit-scrollbar-thumb]:bg-transparent"
+                  }
+                `}
+              >
+                <PersonRecordTab
+                  personId={personId}
+                  onDiaryOpen={setSelectedDiary}
                 />
-
-                <KeywordSection
-                  title="함께한 활동"
-                  icon={<ActivityIcon />}
-                  items={person.topActivities}
-                />
               </div>
-            </header>
-
-            <nav
-              aria-label="사람 상세 탭"
-              className="shrink-0 border-b border-[#F1ECE8] px-7"
-            >
-              <div className="flex gap-8">
-                <button
-                  type="button"
-                  className="border-b-[3px] border-[#F97316] px-1 py-4 text-[14px] font-bold text-[#F97316]"
-                >
-                  기록
-                </button>
-
-                <button
-                  type="button"
-                  disabled
-                  title="다음 단계에서 연결됩니다."
-                  className="cursor-not-allowed border-b-[3px] border-transparent px-1 py-4 text-[14px] font-semibold text-[#B8B0AC]"
-                >
-                  추억
-                </button>
-              </div>
-            </nav>
-
-            <div
-              onScroll={handleScroll}
-              className={`min-h-0 flex-1 overflow-auto px-7 py-6
-                [&::-webkit-scrollbar]:w-2
-                [&::-webkit-scrollbar-track]:bg-transparent
-                [&::-webkit-scrollbar-thumb]:rounded-full
-                ${
-                  isScrolling
-                    ? "[&::-webkit-scrollbar-thumb]:bg-[#A89E98]"
-                    : "[&::-webkit-scrollbar-thumb]:bg-transparent"
-                }
-              `}
-            >
-              <PersonRecordTab personId={personId} />
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </div>,
+
+      {selectedDiary && (
+        <DiaryDetailModal
+          diaryId={selectedDiary.diaryId}
+          imageUrl={selectedDiary.stickerUrl ?? FALLBACK_STICKER_IMAGE}
+          onClose={() => setSelectedDiary(null)}
+        />
+      )}
+    </>,
     document.body,
   );
 }
