@@ -5,6 +5,7 @@ import type {
   DiaryResponse,
   GenerateStickerResponse,
   GenerateTitleResponse,
+  TrashedDiaryResponse,
   UpdateDiaryRequest,
 } from "@/domains/diary/types/diary";
 
@@ -86,4 +87,18 @@ export async function generateSticker(
   await new Promise((resolve) => setTimeout(resolve, 1200));
 
   return { imageUrl: mockStickerImageUrl(excludeImageUrl) };
+}
+
+export async function getTrashedDiaries(): Promise<TrashedDiaryResponse[]> {
+  return apiClient<TrashedDiaryResponse[]>("/api/diaries/trash");
+}
+
+export async function restoreDiary(
+  id: string,
+  replace = false,
+): Promise<DiaryResponse> {
+  return apiClient<DiaryResponse>(
+    `/api/diaries/${id}/restore${replace ? "?replace=true" : ""}`,
+    { method: "POST" },
+  );
 }
