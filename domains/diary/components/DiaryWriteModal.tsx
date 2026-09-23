@@ -8,6 +8,10 @@ import { useGenerateTitle } from "@/domains/diary/hooks/useGenerateTitle";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { formatDisplayDate } from "@/domains/diary/utils/date";
 import { DIARY_FONT } from "@/domains/diary/utils/fonts";
+import type {
+  ExtractionResult,
+  StickerType,
+} from "@/domains/diary/types/diary";
 
 type Step = "content" | "keyword" | "loading" | "result";
 
@@ -16,6 +20,24 @@ const TITLE_MAX_LENGTH = 20;
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "요청에 실패했습니다.";
+}
+
+function ErrorRetryBanner({
+  error,
+}: {
+  error: { message: string; retry: () => void };
+}) {
+  return (
+    <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl bg-red-50 p-4 text-center">
+      <p className="text-sm text-red-600">{error.message}</p>
+      <button
+        onClick={error.retry}
+        className="text-sm font-medium text-[#F97316] underline cursor-pointer"
+      >
+        다시 시도
+      </button>
+    </div>
+  );
 }
 
 interface DiaryWriteModalProps {
@@ -34,10 +56,20 @@ export function DiaryWriteModal({
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const [title, setTitle] = useState("");
-  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywordOptions, setKeywordOptions] = useState<
+    { keyword: string; type: StickerType }[]
+  >([]);
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+  const [selectedKeywordType, setSelectedKeywordType] =
+    useState<StickerType | null>(null);
+  const [extractionResult, setExtractionResult] =
+    useState<ExtractionResult | null>(null);
   const [stickerImageUrl, setStickerImageUrl] = useState<string | null>(null);
   const [hasRegenerated, setHasRegenerated] = useState(false);
+  const [error, setError] = useState<{
+    message: string;
+    retry: () => void;
+  } | null>(null);
 
   const generateTitleMutation = useGenerateTitle();
   const generateStickerMutation = useGenerateSticker();
@@ -54,48 +86,67 @@ export function DiaryWriteModal({
   }
 
   async function handleGenerateTitle() {
+    setError(null);
     try {
-      const result = await generateTitleMutation.mutateAsync(content);
+      const result = await generateTitleMutation.mutateAsync({
+        content,
+        weather,
+      });
       setTitle(result.title);
-      setKeywords(result.keywords);
+      setKeywordOptions([
+        ...result.extractedKeywords.map((keyword) => ({
+          keyword,
+          type: "EXTRACTED" as const,
+        })),
+        { keyword: result.compressedKeyword, type: "COMPRESSED" as const },
+      ]);
+      setExtractionResult(result.extractionResult);
       setStep("keyword");
-    } catch (error) {
-      alert(errorMessage(error));
+    } catch (e) {
+      setError({ message: errorMessage(e), retry: handleGenerateTitle });
     }
   }
 
-  async function handleSelectKeyword(keyword: string) {
+  async function handleSelectKeyword(keyword: string, type: StickerType) {
     setSelectedKeyword(keyword);
+    setSelectedKeywordType(type);
     setStep("loading");
+    setError(null);
     try {
-      const result = await generateStickerMutation.mutateAsync({ keyword });
+      const result = await generateStickerMutation.mutateAsync(keyword);
       setStickerImageUrl(result.imageUrl);
       setStep("result");
-    } catch (error) {
-      alert(errorMessage(error));
+    } catch (e) {
       setStep("keyword");
+      setError({
+        message: errorMessage(e),
+        retry: () => handleSelectKeyword(keyword, type),
+      });
     }
   }
 
   async function handleRegenerate() {
     if (hasRegenerated || !selectedKeyword) return;
-    setHasRegenerated(true);
     setStep("loading");
+    setError(null);
     try {
-      const result = await generateStickerMutation.mutateAsync({
-        keyword: selectedKeyword,
-        excludeImageUrl: stickerImageUrl ?? undefined,
-      });
+      const result = await generateStickerMutation.mutateAsync(
+        selectedKeyword,
+      );
       setStickerImageUrl(result.imageUrl);
       setStep("result");
-    } catch (error) {
-      alert(errorMessage(error));
+      // 성공했을 때만 1회 제한을 소모한다 (실패하면 다시 시도할 수 있어야 함)
+      setHasRegenerated(true);
+    } catch (e) {
       setStep("result");
+      setError({ message: errorMessage(e), retry: handleRegenerate });
     }
   }
 
   async function handleConfirmSave() {
-    if (!selectedKeyword || !stickerImageUrl) return;
+    if (!selectedKeyword || !selectedKeywordType || !stickerImageUrl) return;
+    if (!extractionResult) return;
+    setError(null);
     try {
       await createDiaryMutation.mutateAsync({
         entryDate: initialDate,
@@ -104,12 +155,12 @@ export function DiaryWriteModal({
         content,
         imageUrl: stickerImageUrl,
         keyword: selectedKeyword,
-        type: "EXTRACTED",
-        extractionResult: { persons: [], places: [], activities: [] },
+        type: selectedKeywordType,
+        extractionResult,
       });
       onClose();
-    } catch (error) {
-      alert(errorMessage(error));
+    } catch (e) {
+      setError({ message: errorMessage(e), retry: handleConfirmSave });
     }
   }
 
@@ -193,6 +244,7 @@ export function DiaryWriteModal({
                 취소
               </button>
             </div>
+            {error && <ErrorRetryBanner error={error} />}
           </>
         )}
 
@@ -210,16 +262,17 @@ export function DiaryWriteModal({
               스티커로 만들고 싶은 키워드를 선택해주세요.
             </p>
             <div className="flex gap-3 justify-center">
-              {keywords.map((k) => (
+              {keywordOptions.map(({ keyword, type }) => (
                 <button
-                  key={k}
-                  onClick={() => handleSelectKeyword(k)}
+                  key={keyword}
+                  onClick={() => handleSelectKeyword(keyword, type)}
                   className="bg-[#F97316] text-white rounded-full px-5 py-3 font-medium cursor-pointer"
                 >
-                  {k}
+                  {keyword}
                 </button>
               ))}
             </div>
+            {error && <ErrorRetryBanner error={error} />}
           </>
         )}
 
@@ -264,6 +317,7 @@ export function DiaryWriteModal({
             >
               확인
             </button>
+            {error && <ErrorRetryBanner error={error} />}
           </div>
         )}
 
