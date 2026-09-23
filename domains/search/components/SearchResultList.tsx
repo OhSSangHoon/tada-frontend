@@ -4,6 +4,7 @@ import Image from "next/image";
 interface SearchResultListProps {
   results: SearchResultResponse[];
   keyword: string;
+  onSelectDiary: (result: SearchResultResponse) => void;
 }
 
 const CONTENT_PREVIEW_LENGTH = 60;
@@ -33,11 +34,19 @@ function highlightKeyword(text: string, keyword: string) {
   );
 }
 
-export function SearchResultList({ results, keyword }: SearchResultListProps) {
+export function SearchResultList({
+  results,
+  keyword,
+  onSelectDiary,
+}: SearchResultListProps) {
   return (
     <ul className="flex flex-col divide-y divide-gray-100">
       {results.map((item) => (
-        <li key={item.id} className="flex gap-3 px-4 py-3 hover:bg-gray-50">
+        <li
+          key={item.id}
+          onClick={() => onSelectDiary(item)}
+          className="flex cursor-pointer gap-3 px-4 py-3 hover:bg-gray-50"
+        >
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-orange-50">
             {item.stickerImageUrl ? (
               <Image
