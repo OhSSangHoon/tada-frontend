@@ -50,6 +50,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
         // 백엔드가 Refresh Token도 반환하므로 최신 값으로 저장한다.
         setRefreshToken(data.refreshToken);
+
+        // Access Token 복원 전 Authorization 헤더 없이 실패했을 수 있는 캘린더를 다시 조회한다.
+        queryClient.invalidateQueries({
+          queryKey: ["calendar"],
+        });
       } catch {
         // Refresh Token 재발급에 실패하면 저장된 Refresh Token을 제거한다.
         clearRefreshToken();
@@ -60,7 +65,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
 
     restoreAccessToken();
-  }, []);
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

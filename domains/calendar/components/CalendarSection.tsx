@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type DragEvent } from "react";
+import { useEffect, useState, type DragEvent } from "react";
 import Image from "next/image";
 import { useCalendar } from "@/domains/calendar/hooks/useCalendar";
 import { useCanCreate } from "@/domains/diary/hooks/useCanCreate";
@@ -61,7 +61,8 @@ export function CalendarSection() {
   const [draggingDiaryId, setDraggingDiaryId] = useState<string | null>(null);
   const [trashTargetId, setTrashTargetId] = useState<string | null>(null);
 
-  const { data, isLoading, isError, isFetching } = useCalendar(year, month);
+  const { data, isLoading, isError, isFetching, isAuthReady, isLoggedOut } =
+    useCalendar(year, month);
   const canCreateMutation = useCanCreate();
   const trashDiaryMutation = useTrashDiary();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -69,6 +70,17 @@ export function CalendarSection() {
   const pendingDate = canCreateMutation.isPending
     ? canCreateMutation.variables
     : undefined;
+
+  useEffect(() => {
+    // 로그아웃하면 열려 있던 일기 작성/상세 모달을 닫는다.
+    const handleAuthCleared = () => setModal(null);
+
+    window.addEventListener("auth-cleared", handleAuthCleared);
+
+    return () => {
+      window.removeEventListener("auth-cleared", handleAuthCleared);
+    };
+  }, []);
 
   async function handleDayClick(
     dateStr: string,
@@ -109,10 +121,17 @@ export function CalendarSection() {
     data?.map((item) => [item.entryDate, item]) ?? [],
   );
 
-  if (isLoading) {
+  if (!isAuthReady || isLoading) {
     return (
       <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (isLoggedOut) {
+    return (
+      <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center text-sm text-gray-500">
+        로그인 후 캘린더를 확인할 수 있어요
       </div>
     );
   }

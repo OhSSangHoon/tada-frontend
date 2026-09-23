@@ -21,6 +21,11 @@ export function useLogin() {
       queryClient.invalidateQueries({
         queryKey: ["auth", "me"],
       });
+
+      // 로그인 전 Authorization 헤더 없이 실패했을 수 있는 캘린더도 다시 조회한다.
+      queryClient.invalidateQueries({
+        queryKey: ["calendar"],
+      });
     },
   });
 }
