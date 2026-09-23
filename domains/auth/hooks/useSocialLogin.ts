@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  setAccessToken,
-  setRefreshToken,
-} from "@/shared/lib/token-store";
+import { setAccessToken, setRefreshToken } from "@/shared/lib/token-store";
 
 type SocialProvider = "google" | "kakao" | "naver";
 

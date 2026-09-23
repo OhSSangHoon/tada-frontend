@@ -5,7 +5,5 @@ import type { SignupRequest } from "@/domains/auth/types/auth";
 export function useSignup() {
   return useMutation({
     mutationFn: (request: SignupRequest) => signUp(request),
-
-
   });
 }

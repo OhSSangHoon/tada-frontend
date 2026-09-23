@@ -130,9 +130,7 @@ export function DiaryWriteModal({
     setStep("loading");
     setError(null);
     try {
-      const result = await generateStickerMutation.mutateAsync(
-        selectedKeyword,
-      );
+      const result = await generateStickerMutation.mutateAsync(selectedKeyword);
       setStickerImageUrl(result.imageUrl);
       setStep("result");
       // 성공했을 때만 1회 제한을 소모한다 (실패하면 다시 시도할 수 있어야 함)

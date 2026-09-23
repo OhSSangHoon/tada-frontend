@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent, type WheelEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+  type WheelEvent,
+} from "react";
 
 const ITEM_HEIGHT = 44;
 const VISIBLE_ROWS = 5;
@@ -59,14 +65,21 @@ export function MonthYearPicker({
 }: MonthYearPickerProps) {
   const minTotal = 0;
   const maxTotal = (maxYear - minYear) * 12 + 11;
-  const initialTotal = clamp((year - minYear) * 12 + (month - 1), minTotal, maxTotal);
+  const initialTotal = clamp(
+    (year - minYear) * 12 + (month - 1),
+    minTotal,
+    maxTotal,
+  );
 
   // totalRef: 드래그 중 매 프레임 읽고 쓰는 값(이벤트 핸들러 전용).
   // total(state): 렌더에 필요한 값(연도/월 표시, 이동 버튼)은 항상 이 state에서 읽는다.
   const totalRef = useRef(initialTotal);
   const [total, setTotal] = useState(initialTotal);
 
-  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i);
+  const years = Array.from(
+    { length: maxYear - minYear + 1 },
+    (_, i) => minYear + i,
+  );
 
   const yearTrackRef = useRef<HTMLDivElement>(null);
   const yearItemRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -131,10 +144,13 @@ export function MonthYearPicker({
     const clamped = clamp(Math.round(t), minTotal, maxTotal);
     totalRef.current = clamped;
     if (yearTrackRef.current) {
-      yearTrackRef.current.style.transition = animate ? "transform 200ms ease-out" : "none";
+      yearTrackRef.current.style.transition = animate
+        ? "transform 200ms ease-out"
+        : "none";
     }
     monthItemRefs.current.forEach((el) => {
-      if (el) el.style.transition = animate ? "transform 200ms ease-out" : "none";
+      if (el)
+        el.style.transition = animate ? "transform 200ms ease-out" : "none";
     });
     syncFromTotal(clamped);
     setTotal(clamped);
@@ -301,7 +317,10 @@ export function MonthYearPicker({
                     yearItemRefs.current[i] = el;
                   }}
                   onClick={() =>
-                    commitTotal(i * 12 + (((totalRef.current % 12) + 12) % 12), true)
+                    commitTotal(
+                      i * 12 + (((totalRef.current % 12) + 12) % 12),
+                      true,
+                    )
                   }
                   className="flex cursor-pointer items-center justify-center text-base"
                   style={{ height: ITEM_HEIGHT }}
