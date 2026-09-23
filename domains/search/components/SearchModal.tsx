@@ -6,6 +6,7 @@ import { SearchResultList } from "@/domains/search/components/SearchResultList";
 import { Pagination } from "@/domains/search/components/Pagination";
 import { ApiError } from "@/shared/lib/api-client";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
+import { useInvalidateSearchOnDiaryUpdate } from "@/domains/search/hooks/useInvalidateSearchOnDiaryUpdate";
 import type { SearchResultResponse } from "@/domains/search/types/search";
 
 const FALLBACK_STICKER_IMAGE = "/stickers/goodday.png";
@@ -34,8 +35,11 @@ export function SearchModal() {
     hasSearched,
   } = useSearch();
 
+  useInvalidateSearchOnDiaryUpdate(selectedResult?.id);
+
   const handleClose = () => {
     setIsOpen(false);
+    setSelectedResult(null);
     reset();
   };
 
