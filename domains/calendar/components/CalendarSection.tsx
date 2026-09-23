@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, type DragEvent } from "react";
+import { useState, type DragEvent } from "react";
 import Image from "next/image";
 import { useCalendar } from "@/domains/calendar/hooks/useCalendar";
 import { useCanCreate } from "@/domains/diary/hooks/useCanCreate";
 import { useTrashDiary } from "@/domains/diary/hooks/useTrashDiary";
 import { TrashDropZone } from "@/domains/calendar/components/TrashDropZone";
+import { MonthNumber } from "@/domains/calendar/components/MonthNumber";
+import { MonthYearPicker } from "@/domains/calendar/components/MonthYearPicker";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { DiaryWriteModal } from "@/domains/diary/components/DiaryWriteModal";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
@@ -19,7 +21,9 @@ type ModalState =
 const today = new Date();
 const TODAY_STR = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 const CURRENT_YEAR = today.getFullYear();
-const YEAR_RANGE = 20;
+// 2000년부터 21세기 끝까지 — 연도 칸 항목 100여 개는 렌더링 부담이 전혀 없는 수준이라 넉넉하게 잡는다
+const MIN_YEAR = 2000;
+const MAX_YEAR = 2100;
 
 // 기본 드래그 이미지는 object-contain을 무시하고 칸 크기로 늘려 그려서, 칸 안에 보이는 비율 그대로 직접 만든다
 function setStickerDragImage(e: DragEvent<HTMLImageElement>) {
@@ -57,12 +61,13 @@ function setStickerDragImage(e: DragEvent<HTMLImageElement>) {
 export function CalendarSection() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [month, setMonth] = useState(today.getMonth() + 1);
+  const [monthDirection, setMonthDirection] = useState<"up" | "down">("up");
   const [modal, setModal] = useState<ModalState>(null);
   const [draggingDiaryId, setDraggingDiaryId] = useState<string | null>(null);
   const [trashTargetId, setTrashTargetId] = useState<string | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
 
-  const { data, isLoading, isError, isFetching, isAuthReady, isLoggedOut } =
-    useCalendar(year, month);
+  const { data, isLoading, isError, isFetching } = useCalendar(year, month);
   const canCreateMutation = useCanCreate();
   const trashDiaryMutation = useTrashDiary();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -70,17 +75,6 @@ export function CalendarSection() {
   const pendingDate = canCreateMutation.isPending
     ? canCreateMutation.variables
     : undefined;
-
-  useEffect(() => {
-    // 로그아웃하면 열려 있던 일기 작성/상세 모달을 닫는다.
-    const handleAuthCleared = () => setModal(null);
-
-    window.addEventListener("auth-cleared", handleAuthCleared);
-
-    return () => {
-      window.removeEventListener("auth-cleared", handleAuthCleared);
-    };
-  }, []);
 
   async function handleDayClick(
     dateStr: string,
@@ -107,6 +101,34 @@ export function CalendarSection() {
     setModal({ type: "write", date: dateStr });
   }
 
+  // 12월에서 더 가면 다음 해 1월로, 1월에서 더 오면 전 해 12월로 자연스럽게 넘어간다
+  function stepMonth(delta: number) {
+    let nextMonth = month + delta;
+    let nextYear = year;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear += 1;
+    } else if (nextMonth < 1) {
+      nextMonth = 12;
+      nextYear -= 1;
+    }
+    if (nextYear < MIN_YEAR || nextYear > MAX_YEAR) return;
+    setMonthDirection(delta > 0 ? "up" : "down");
+    setMonth(nextMonth);
+    setYear(nextYear);
+  }
+
+  function handlePickerConfirm(nextYear: number, nextMonth: number) {
+    const wasLater = nextYear * 12 + nextMonth >= year * 12 + month;
+    setMonthDirection(wasLater ? "up" : "down");
+    setYear(nextYear);
+    setMonth(nextMonth);
+    setShowPicker(false);
+  }
+
+  const isAtMinDate = year === MIN_YEAR && month === 1;
+  const isAtMaxDate = year === MAX_YEAR && month === 12;
+
   async function handleConfirmTrash() {
     if (!trashTargetId) return;
     try {
@@ -121,17 +143,10 @@ export function CalendarSection() {
     data?.map((item) => [item.entryDate, item]) ?? [],
   );
 
-  if (!isAuthReady || isLoading) {
+  if (isLoading) {
     return (
       <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin" />
-      </div>
-    );
-  }
-  if (isLoggedOut) {
-    return (
-      <div className="bg-white shadow-xl p-8 w-205 h-230 mx-auto flex items-center justify-center text-sm text-gray-500">
-        로그인 후 캘린더를 확인할 수 있어요
       </div>
     );
   }
@@ -144,60 +159,66 @@ export function CalendarSection() {
   }
 
   const selectClassName =
-    "w-[145px] h-[50px] rounded-lg bg-[#E6E6E6] border-none appearance-none bg-no-repeat bg-[right_16px_center] pl-5 pr-9 cursor-pointer";
+    "w-[168px] h-[50px] rounded-lg bg-[#F5F5F4] text-[#40312E] border-none appearance-none bg-no-repeat bg-[right_16px_center] pl-5 pr-9 cursor-pointer";
   const selectArrowStyle = {
     fontFamily: "var(--font-google-sans-flex), sans-serif",
     fontWeight: 600,
-    fontSize: "20px",
+    fontSize: "18px",
     backgroundImage:
       "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23A6A6A6' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
   };
+  const stepArrowClassName =
+    "flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-sm font-bold text-[#40312E] hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30";
 
   return (
     <>
       <div className="relative bg-white shadow-xl p-8 w-205 h-230 mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <span
-            className="text-[#F97316] leading-none"
-            style={{
-              fontFamily: "var(--font-sebang-gothic), sans-serif",
-              fontWeight: 700,
-              fontSize: "128px",
-            }}
-          >
-            {String(month).padStart(2, "0")}
-          </span>
+        <div className="mb-6 flex items-end justify-between">
+          <MonthNumber month={month} direction={monthDirection} />
           <div className="flex items-center gap-2">
             {isFetching && (
               <div className="w-5 h-5 border-2 border-[#FFEDD5] border-t-[#F97316] rounded-full animate-spin mr-1" />
             )}
-            <select
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className={selectClassName}
-              style={selectArrowStyle}
-            >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>
-                  {m}월
-                </option>
-              ))}
-            </select>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className={selectClassName}
-              style={selectArrowStyle}
-            >
-              {Array.from(
-                { length: YEAR_RANGE * 2 + 1 },
-                (_, i) => CURRENT_YEAR - YEAR_RANGE + i,
-              ).map((y) => (
-                <option key={y} value={y}>
-                  {y}년
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowPicker(true)}
+                className={selectClassName}
+                style={selectArrowStyle}
+              >
+                {year}년 {String(month).padStart(2, "0")}월
+              </button>
+              {showPicker && (
+                <MonthYearPicker
+                  year={year}
+                  month={month}
+                  minYear={MIN_YEAR}
+                  maxYear={MAX_YEAR}
+                  onCancel={() => setShowPicker(false)}
+                  onConfirm={handlePickerConfirm}
+                />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => stepMonth(-1)}
+                disabled={isAtMinDate}
+                aria-label="이전 달"
+                className={stepArrowClassName}
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                onClick={() => stepMonth(1)}
+                disabled={isAtMaxDate}
+                aria-label="다음 달"
+                className={stepArrowClassName}
+              >
+                ▼
+              </button>
+            </div>
           </div>
         </div>
         <div

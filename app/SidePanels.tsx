@@ -5,6 +5,7 @@ import { TrashPanel } from "@/domains/diary/components/TrashPanel";
 import { PeoplePanel } from "@/domains/curator/components/PeoplePanel";
 import { SidePanelRail } from "@/shared/components/side-panel/SidePanelRail";
 import { SidePanelPlaceholder } from "@/shared/components/side-panel/SidePanelParts";
+import { StickerPanel } from "@/domains/sticker/components/StickerPanel";
 import {
   AlbumIcon,
   MemoryIcon,
@@ -39,12 +40,7 @@ const items = [
     id: "album",
     label: "스티커 앨범",
     icon: <AlbumIcon className="h-7 w-7" />,
-    renderContent: () => (
-      <SidePanelPlaceholder
-        title="스티커 앨범"
-        description="그동안 모은 스티커를 한눈에 볼 수 있어요."
-      />
-    ),
+    renderContent: (isOpen: boolean) => <StickerPanel isOpen={isOpen} />,
   },
   {
     id: "trash",
