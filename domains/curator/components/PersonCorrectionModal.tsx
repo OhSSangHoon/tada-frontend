@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCorrectPerson } from "@/domains/curator/hooks/useCorrectPerson";
 import { usePersons } from "@/domains/curator/hooks/usePersons";
@@ -36,6 +36,11 @@ export function PersonCorrectionModal({
   const [targetPersonId, setTargetPersonId] = useState("");
   const [newDisplayName, setNewDisplayName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isPersonListScrolling, setIsPersonListScrolling] = useState(false);
+
+  const personListScrollTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const { data: persons = [], isLoading: isPersonsLoading } = usePersons(true);
 
@@ -45,6 +50,14 @@ export function PersonCorrectionModal({
     error,
     reset,
   } = useCorrectPerson();
+
+  useEffect(() => {
+    return () => {
+      if (personListScrollTimeoutRef.current) {
+        clearTimeout(personListScrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const selectablePersons = useMemo(
     () => persons.filter((person) => person.id !== currentPersonId),
@@ -59,6 +72,18 @@ export function PersonCorrectionModal({
   function clearError() {
     setValidationError(null);
     reset();
+  }
+
+  function handlePersonListScroll() {
+    setIsPersonListScrolling(true);
+
+    if (personListScrollTimeoutRef.current) {
+      clearTimeout(personListScrollTimeoutRef.current);
+    }
+
+    personListScrollTimeoutRef.current = setTimeout(() => {
+      setIsPersonListScrolling(false);
+    }, 700);
   }
 
   async function handleSubmit() {
@@ -213,7 +238,19 @@ export function PersonCorrectionModal({
                   연결할 수 있는 다른 사람이 없어요. 새 사람으로 만들어 주세요.
                 </div>
               ) : (
-                <div className="max-h-[190px] space-y-2 overflow-y-auto pr-1">
+                <div
+                  onScroll={handlePersonListScroll}
+                  className={`max-h-[190px] space-y-2 overflow-y-auto pr-1
+                    [&::-webkit-scrollbar]:w-2
+                    [&::-webkit-scrollbar-track]:bg-transparent
+                    [&::-webkit-scrollbar-thumb]:rounded-full
+                    ${
+                      isPersonListScrolling
+                        ? "[&::-webkit-scrollbar-thumb]:bg-[#A89E98]"
+                        : "[&::-webkit-scrollbar-thumb]:bg-transparent"
+                    }
+                  `}
+                >
                   {selectablePersons.map((person) => (
                     <button
                       key={person.id}
