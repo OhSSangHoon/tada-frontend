@@ -19,7 +19,7 @@ export interface TrashedDiaryResponse extends DiaryResponse {
   keyword: string | null;
 }
 
-// 백엔드 ExtractionResult(global/event/dto)와 형태만 맞춤 — Gemini 연동 전까지는 항상 빈 배열로 mock
+// 백엔드 ExtractionResult(global/event/dto)와 형태만 맞춤
 export interface ExtractionResult {
   persons: unknown[];
   places: unknown[];
@@ -46,13 +46,14 @@ export interface UpdateDiaryRequest {
   extractionResult?: ExtractionResult;
 }
 
-// mock — generate-title 백엔드 미구현(5주차 예정)이라 프론트에서 흉내만 냄
+// app/api/generate-title 라우트가 n8n diary-analysis 응답을 이 형태로 재가공해서 준다
 export interface GenerateTitleResponse {
   title: string;
-  keywords: string[];
+  compressedKeyword: string;
+  extractedKeywords: string[];
+  extractionResult: ExtractionResult;
 }
 
-// mock — generate-sticker/regenerate-sticker 백엔드 미구현(5주차 예정)
 export interface GenerateStickerResponse {
   imageUrl: string;
 }

@@ -41,7 +41,7 @@ export function Header() {
         ) : me ? (
           <>
             {/* 로그인 상태 */}
-              <span>{me.nickname}님&nbsp;</span>
+            <span>{me.nickname}님&nbsp;</span>
 
             <button
               type="button"
@@ -53,19 +53,14 @@ export function Header() {
           </>
         ) : (
           // 로그아웃 상태
-          <button
-            type="button"
-            onClick={onOpen}
-          >
+          <button type="button" onClick={onOpen}>
             로그인
           </button>
         )}
       </header>
 
       {/* 로그인 버튼을 눌렀을 때 모달을 보여준다. */}
-      {isAuthModalOpen && (
-        <AuthModal onClose={onClose} />
-      )}
+      {isAuthModalOpen && <AuthModal onClose={onClose} />}
     </>
   );
 }

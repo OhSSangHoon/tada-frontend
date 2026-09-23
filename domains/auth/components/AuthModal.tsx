@@ -11,8 +11,8 @@ import { SignupForm } from "@/domains/auth/components/SignupForm";
 
 //부모 컴포넌트에서 전달받을 값을 정의한다.
 interface AuthModalProps {
-    onClose: () => void;
-    }
+  onClose: () => void;
+}
 
 //인증 모달 컴포넌트
 export function AuthModal({ onClose }: AuthModalProps) {
@@ -25,27 +25,17 @@ export function AuthModal({ onClose }: AuthModalProps) {
       {/* 실제 모달 내용 영역 */}
       <div>
         {/* 모달 닫기 버튼 */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="인증 모달 닫기"
-        >
+        <button type="button" onClick={onClose} aria-label="인증 모달 닫기">
           ×
         </button>
 
         {/* 로그인 / 회원가입 화면 전환 버튼 */}
         <div>
-          <button
-            type="button"
-            onClick={() => setMode("login")}
-          >
+          <button type="button" onClick={() => setMode("login")}>
             로그인
           </button>
 
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-          >
+          <button type="button" onClick={() => setMode("signup")}>
             회원가입
           </button>
         </div>

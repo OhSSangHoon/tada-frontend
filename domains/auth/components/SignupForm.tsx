@@ -32,19 +32,27 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
     }
 
     // 입력한 값을 회원가입 요청으로 전달한다.
-    signupMutation.mutate(
-      {
-        loginId,
-        password,
-        passwordConfirm,
-        nickname,
-      },
-      {
-        // 회원가입 성공 시 부모가 전달한 함수를 실행한다.
-        onSuccess,
-      },
-    );
+    // 성공 메시지를 먼저 보여줘야 하므로, 로그인 화면 전환(onSuccess)은
+    // 사용자가 직접 버튼을 눌렀을 때만 실행한다.
+    signupMutation.mutate({
+      loginId,
+      password,
+      passwordConfirm,
+      nickname,
+    });
   };
+
+  // 회원가입이 끝나면 폼 대신 완료 메시지와 로그인 이동 버튼을 보여준다.
+  if (signupMutation.isSuccess) {
+    return (
+      <div>
+        <p>회원가입이 완료되었습니다.</p>
+        <button type="button" onClick={onSuccess}>
+          로그인하러 가기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -127,9 +135,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       {password !== passwordConfirm && passwordConfirm.length > 0 && (
         <p>비밀번호가 일치하지 않습니다.</p>
       )}
-
-      {/* 회원가입 성공 시 메시지 표시 */}
-      {signupMutation.isSuccess && <p>회원가입이 완료되었습니다.</p>}
 
       {/* 회원가입 실패 시 백엔드 에러 메시지 표시 */}
       {signupMutation.isError && (

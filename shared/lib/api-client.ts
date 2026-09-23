@@ -27,7 +27,7 @@ export class ApiError extends Error {
 type ApiClientOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
 // 인증 정보를 모두 정리한다.
-function clearAuth() {
+export function clearAuth() {
   // Access Token 삭제
   clearAccessToken();
 
