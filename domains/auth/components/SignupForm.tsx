@@ -7,6 +7,7 @@ import { useSignup } from "@/domains/auth/hooks/useSignup";
 interface SignupFormProps {
   onSuccess: () => void;
 }
+
 export function SignupForm({ onSuccess }: SignupFormProps) {
   // 회원가입 폼 입력값을 관리한다.
   const [loginId, setLoginId] = useState("");
@@ -14,7 +15,9 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
 
-
+  // 비밀번호 표시/숨김 상태
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   // 회원가입 API 요청 상태를 관리한다.
   const signupMutation = useSignup();
@@ -39,7 +42,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       {
         // 회원가입 성공 시 부모가 전달한 함수를 실행한다.
         onSuccess,
-      }
+      },
     );
   };
 
@@ -61,27 +64,45 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       {/* 비밀번호 입력 */}
       <div>
         <label htmlFor="password">비밀번호</label>
+
         <input
           id="password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="비밀번호를 입력하세요"
           required
         />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          aria-pressed={showPassword}
+        >
+          {showPassword ? "숨기기" : "보기"}
+        </button>
       </div>
 
       {/* 비밀번호 확인 입력 */}
       <div>
         <label htmlFor="passwordConfirm">비밀번호 확인</label>
+
         <input
           id="passwordConfirm"
-          type="password"
+          type={showPasswordConfirm ? "text" : "password"}
           value={passwordConfirm}
           onChange={(event) => setPasswordConfirm(event.target.value)}
           placeholder="비밀번호를 다시 입력하세요"
           required
         />
+
+        <button
+          type="button"
+          onClick={() => setShowPasswordConfirm((prev) => !prev)}
+          aria-pressed={showPasswordConfirm}
+        >
+          {showPasswordConfirm ? "숨기기" : "보기"}
+        </button>
       </div>
 
       {/* 닉네임 입력 */}

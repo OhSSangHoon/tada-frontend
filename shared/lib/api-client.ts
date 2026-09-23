@@ -26,6 +26,20 @@ export class ApiError extends Error {
 
 type ApiClientOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
+// 인증 정보를 모두 정리한다.
+function clearAuth() {
+  // Access Token 삭제
+  clearAccessToken();
+
+  // Refresh Token 삭제
+  clearRefreshToken();
+
+  // 인증이 해제되었다는 것을 React Query 쪽에 알린다.
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("auth-cleared"));
+  }
+}
+
 // Refresh Token으로 Access Token 재발급
 async function reissueAccessToken(): Promise<string | null> {
   const refreshToken = getRefreshToken();
@@ -54,6 +68,7 @@ async function reissueAccessToken(): Promise<string | null> {
       return null;
     }
 
+    // 새 Access Token 저장
     setAccessToken(result.data.accessToken);
 
     // 백엔드가 Refresh Token도 반환하므로 최신 값으로 저장한다.
@@ -70,6 +85,7 @@ export async function apiClient<T>(
   { body, headers, ...options }: ApiClientOptions = {},
 ): Promise<T> {
   const accessToken = getAccessToken();
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
@@ -82,6 +98,7 @@ export async function apiClient<T>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
   const result: ApiResponse<T> = await response.json();
 
   if (!response.ok || !result.success) {
@@ -112,14 +129,14 @@ export async function apiClient<T>(
 
         const retryResult: ApiResponse<T> = await retryResponse.json();
 
+        // 재시도 성공
         if (retryResponse.ok && retryResult.success) {
           return retryResult.data as T;
         }
 
         // 재시도까지 401이면 인증 만료로 처리
         if (retryResponse.status === 401) {
-          clearAccessToken();
-          clearRefreshToken();
+          clearAuth();
         }
 
         throw new ApiError(
@@ -129,8 +146,7 @@ export async function apiClient<T>(
       }
 
       // Refresh Token 재발급도 실패하면 로그아웃 상태로 정리
-      clearAccessToken();
-      clearRefreshToken();
+      clearAuth();
     }
 
     // 403은 로그아웃하지 않고 그대로 에러 처리
