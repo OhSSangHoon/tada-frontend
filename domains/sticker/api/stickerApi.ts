@@ -14,7 +14,7 @@ export const DEFAULT_PAGE = 0;
 export const DEFAULT_PAGE_SIZE = 12;
 export const DEFAULT_SORT: StickerSortOption = "latest";
 
-export function fetchStickers({
+export function getStickers({
   page = DEFAULT_PAGE,
   size = DEFAULT_PAGE_SIZE,
   sort = DEFAULT_SORT,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSearch, MAX_QUERY_LENGTH } from "@/domains/search/hooks/useSearch";
 import { SearchResultList } from "@/domains/search/components/SearchResultList";
-import { Pagination } from "@/domains/search/components/Pagination";
+import { Pagination } from "@/shared/components/Pagination";
 import { ApiError } from "@/shared/lib/api-client";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
 import { useInvalidateSearchOnDiaryUpdate } from "@/domains/search/hooks/useInvalidateSearchOnDiaryUpdate";

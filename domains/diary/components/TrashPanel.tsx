@@ -10,7 +10,7 @@ import {
   SidePanelBody,
   SidePanelHeader,
 } from "@/shared/components/side-panel/SidePanelParts";
-import { Pagination } from "@/domains/search/components/Pagination";
+import { Pagination } from "@/shared/components/Pagination";
 import { ApiError } from "@/shared/lib/api-client";
 import { formatDisplayDate, formatShortDate } from "@/domains/diary/utils/date";
 import type { TrashedDiaryResponse } from "@/domains/diary/types/diary";

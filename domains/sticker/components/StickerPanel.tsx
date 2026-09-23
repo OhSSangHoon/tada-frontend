@@ -4,7 +4,7 @@ import {
   SidePanelHeader,
   SidePanelBody,
 } from "@/shared/components/side-panel/SidePanelParts";
-import { Pagination } from "@/domains/search/components/Pagination";
+import { Pagination } from "@/shared/components/Pagination";
 import { SortDropdown } from "@/domains/sticker/components/SortDropdown";
 import { StickerGridView } from "@/domains/sticker/components/StickerGridView";
 import { useStickers } from "@/domains/sticker/hooks/useStickers";
