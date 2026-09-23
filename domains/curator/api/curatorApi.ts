@@ -1,6 +1,8 @@
 import { apiClient } from "@/shared/lib/api-client";
 import type {
+  PersonCorrectionRequest,
   PersonDetailResponse,
+  PersonRenameRequest,
   PersonSummaryResponse,
   PersonTimelinePageResponse,
   PersonTimelineSort,
@@ -31,5 +33,29 @@ export async function getPersonTimeline(
 
   return apiClient<PersonTimelinePageResponse>(
     `/api/curator/persons/${personId}/timeline?${params.toString()}`,
+  );
+}
+
+export async function renamePerson(
+  personId: string,
+  request: PersonRenameRequest,
+): Promise<void> {
+  await apiClient<void>(`/api/curator/persons/${personId}`, {
+    method: "PATCH",
+    body: request,
+  });
+}
+
+export async function correctPerson(
+  personId: string,
+  candidateId: string,
+  request: PersonCorrectionRequest,
+): Promise<void> {
+  await apiClient<void>(
+    `/api/curator/persons/${personId}/candidates/${candidateId}`,
+    {
+      method: "PATCH",
+      body: request,
+    },
   );
 }

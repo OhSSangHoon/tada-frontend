@@ -43,3 +43,23 @@ export interface PersonTimelinePageResponse {
 }
 
 export type PersonTimelineSort = "LATEST" | "OLDEST";
+
+export interface PersonRenameRequest {
+  displayName: string;
+}
+
+export type PersonCorrectionRequest =
+  | {
+      targetPersonId: string;
+      newDisplayName?: never;
+    }
+  | {
+      targetPersonId?: never;
+      newDisplayName: string;
+    };
+
+export interface CorrectPersonParams {
+  personId: string;
+  candidateId: string;
+  request: PersonCorrectionRequest;
+}

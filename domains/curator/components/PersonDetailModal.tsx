@@ -2,12 +2,21 @@
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
-import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
+import { PersonCorrectionModal } from "@/domains/curator/components/PersonCorrectionModal";
 import { PersonRecordTab } from "@/domains/curator/components/PersonRecordTab";
 import { usePersonDetail } from "@/domains/curator/hooks/usePersonDetail";
+import { useRenamePerson } from "@/domains/curator/hooks/useRenamePerson";
 import type { PersonTimelineItemResponse } from "@/domains/curator/types/curator";
+import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
 
 const FALLBACK_STICKER_IMAGE = "/stickers/goodday.png";
 
@@ -21,10 +30,21 @@ export function PersonDetailModal({
   onClose,
 }: PersonDetailModalProps) {
   const [isScrolling, setIsScrolling] = useState(false);
+
   const [selectedDiary, setSelectedDiary] =
     useState<PersonTimelineItemResponse | null>(null);
 
+  const [correctionItem, setCorrectionItem] =
+    useState<PersonTimelineItemResponse | null>(null);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameValidationError, setNameValidationError] = useState<string | null>(
+    null,
+  );
+
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
     data: person,
@@ -32,6 +52,32 @@ export function PersonDetailModal({
     isError,
     refetch,
   } = usePersonDetail(personId);
+
+  const {
+    mutateAsync: renamePerson,
+    isPending: isRenaming,
+    error: renameError,
+    reset: resetRename,
+  } = useRenamePerson(personId);
+
+  const cancelNameEdit = useCallback(() => {
+    setIsEditingName(false);
+    setNameValidationError(null);
+    resetRename();
+
+    if (person) {
+      setNameDraft(person.displayName);
+    }
+  }, [person, resetRename]);
+
+  useEffect(() => {
+    if (!isEditingName) {
+      return;
+    }
+
+    nameInputRef.current?.focus();
+    nameInputRef.current?.select();
+  }, [isEditingName]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -42,8 +88,18 @@ export function PersonDetailModal({
       event.preventDefault();
       event.stopImmediatePropagation();
 
+      if (correctionItem) {
+        setCorrectionItem(null);
+        return;
+      }
+
       if (selectedDiary) {
         setSelectedDiary(null);
+        return;
+      }
+
+      if (isEditingName) {
+        cancelNameEdit();
         return;
       }
 
@@ -55,7 +111,13 @@ export function PersonDetailModal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [onClose, selectedDiary]);
+  }, [
+    cancelNameEdit,
+    correctionItem,
+    isEditingName,
+    onClose,
+    selectedDiary,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -76,6 +138,58 @@ export function PersonDetailModal({
       setIsScrolling(false);
     }, 700);
   }
+
+  function beginNameEdit() {
+    if (!person) {
+      return;
+    }
+
+    setNameDraft(person.displayName);
+    setNameValidationError(null);
+    resetRename();
+    setIsEditingName(true);
+  }
+
+  async function handleRenameSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!person || isRenaming) {
+      return;
+    }
+
+    const trimmedName = nameDraft.trim();
+
+    if (!trimmedName) {
+      setNameValidationError("변경할 이름을 입력해 주세요.");
+      return;
+    }
+
+    if (trimmedName === person.displayName) {
+      cancelNameEdit();
+      return;
+    }
+
+    setNameValidationError(null);
+    resetRename();
+
+    try {
+      await renamePerson({
+        displayName: trimmedName,
+      });
+
+      setIsEditingName(false);
+      setNameDraft(trimmedName);
+    } catch {
+      // mutation error는 아래 UI에서 표시한다.
+    }
+  }
+
+  const renameErrorMessage =
+    renameError instanceof Error
+      ? renameError.message
+      : renameError
+        ? "이름을 변경하지 못했어요."
+        : null;
 
   return createPortal(
     <>
@@ -113,10 +227,73 @@ export function PersonDetailModal({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start gap-3">
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-[26px] font-bold tracking-[-0.02em] text-[#40312E]">
-                          {person.displayName}
-                          {getWaGwa(person.displayName)}의 기록
-                        </h2>
+                        {isEditingName ? (
+                          <form
+                            onSubmit={(event) => void handleRenameSubmit(event)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                ref={nameInputRef}
+                                value={nameDraft}
+                                disabled={isRenaming}
+                                maxLength={50}
+                                onChange={(event) => {
+                                  setNameDraft(event.target.value);
+
+                                  if (nameValidationError) {
+                                    setNameValidationError(null);
+                                  }
+
+                                  if (renameError) {
+                                    resetRename();
+                                  }
+                                }}
+                                aria-label="사람 이름"
+                                className="min-w-0 flex-1 rounded-xl border border-[#E7DDD7] bg-white px-3 py-2 text-[22px] font-bold tracking-[-0.02em] text-[#40312E] outline-none transition focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/10 disabled:bg-[#F8F5F3]"
+                              />
+
+                              <button
+                                type="submit"
+                                disabled={isRenaming}
+                                className="shrink-0 rounded-xl bg-[#F97316] px-3 py-2 text-[12px] font-bold text-white transition hover:bg-[#EA6A0B] disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {isRenaming ? "저장 중" : "저장"}
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isRenaming}
+                                onClick={cancelNameEdit}
+                                className="shrink-0 rounded-xl bg-[#F5F0ED] px-3 py-2 text-[12px] font-bold text-[#746A65] transition hover:bg-[#EEE7E3] disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                취소
+                              </button>
+                            </div>
+
+                            {(nameValidationError || renameErrorMessage) && (
+                              <p className="mt-2 text-[12px] font-medium text-red-500">
+                                {nameValidationError ?? renameErrorMessage}
+                              </p>
+                            )}
+                          </form>
+                        ) : (
+                          <div className="flex min-w-0 items-center gap-2">
+                            <h2 className="truncate text-[26px] font-bold tracking-[-0.02em] text-[#40312E]">
+                              {person.displayName}
+                              {getWaGwa(person.displayName)}의 기록
+                            </h2>
+
+                            <button
+                              type="button"
+                              onClick={beginNameEdit}
+                              aria-label={`${person.displayName} 이름 수정`}
+                              title="이름 수정"
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#A09792] transition hover:bg-[#FFF3E8] hover:text-[#F97316]"
+                            >
+                              <EditIcon />
+                            </button>
+                          </div>
+                        )}
 
                         <p className="mt-1 text-[13px] text-[#978D88]">
                           일기에 남은 {person.displayName}
@@ -198,16 +375,16 @@ export function PersonDetailModal({
                   [&::-webkit-scrollbar]:w-2
                   [&::-webkit-scrollbar-track]:bg-transparent
                   [&::-webkit-scrollbar-thumb]:rounded-full
-                  ${
-                    isScrolling
-                      ? "[&::-webkit-scrollbar-thumb]:bg-[#A89E98]"
-                      : "[&::-webkit-scrollbar-thumb]:bg-transparent"
+                  ${isScrolling
+                    ? "[&::-webkit-scrollbar-thumb]:bg-[#A89E98]"
+                    : "[&::-webkit-scrollbar-thumb]:bg-transparent"
                   }
                 `}
               >
                 <PersonRecordTab
                   personId={personId}
                   onDiaryOpen={setSelectedDiary}
+                  onCorrectionRequest={setCorrectionItem}
                 />
               </div>
             </>
@@ -220,6 +397,15 @@ export function PersonDetailModal({
           diaryId={selectedDiary.diaryId}
           imageUrl={selectedDiary.stickerUrl ?? FALLBACK_STICKER_IMAGE}
           onClose={() => setSelectedDiary(null)}
+        />
+      )}
+
+      {correctionItem && person && (
+        <PersonCorrectionModal
+          currentPersonId={personId}
+          currentPersonName={person.displayName}
+          item={correctionItem}
+          onClose={() => setCorrectionItem(null)}
         />
       )}
     </>,
@@ -289,7 +475,9 @@ function DetailError({ onClose, onRetry }: DetailErrorProps) {
         사람 정보를 불러오지 못했어요
       </p>
 
-      <p className="mt-1 text-sm text-[#958B86]">잠시 후 다시 시도해 주세요.</p>
+      <p className="mt-1 text-sm text-[#958B86]">
+        잠시 후 다시 시도해 주세요.
+      </p>
 
       <div className="mt-5 flex gap-2">
         <button
@@ -358,6 +546,24 @@ function ActivityIcon() {
     >
       <path d="M5 12h14M12 5v14" />
       <circle cx="12" cy="12" r="8" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-[17px] w-[17px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4Z" />
+      <path d="m13.5 6.5 4 4" />
     </svg>
   );
 }

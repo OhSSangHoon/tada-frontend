@@ -12,11 +12,13 @@ import type {
 interface PersonRecordTabProps {
   personId: string;
   onDiaryOpen: (item: PersonTimelineItemResponse) => void;
+  onCorrectionRequest: (item: PersonTimelineItemResponse) => void;
 }
 
 export function PersonRecordTab({
   personId,
   onDiaryOpen,
+  onCorrectionRequest,
 }: PersonRecordTabProps) {
   const [sort, setSort] = useState<PersonTimelineSort>("LATEST");
 
@@ -67,7 +69,12 @@ export function PersonRecordTab({
     return () => {
       observer.disconnect();
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError]);
+  }, [
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  ]);
 
   const initialLoadFailed = isError && items.length === 0;
 
@@ -125,6 +132,7 @@ export function PersonRecordTab({
                 <PersonTimelineCard
                   item={item}
                   onClick={() => onDiaryOpen(item)}
+                  onCorrectionRequest={() => onCorrectionRequest(item)}
                 />
               </div>
             ))}
@@ -179,11 +187,10 @@ function SortButton({ active, onClick, children }: SortButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition ${
-        active
+      className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition ${active
           ? "bg-[#F97316] text-white shadow-sm"
           : "text-[#8C827D] hover:text-[#F97316]"
-      }`}
+        }`}
     >
       {children}
     </button>
