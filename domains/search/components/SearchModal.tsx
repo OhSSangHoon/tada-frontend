@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearch, MAX_QUERY_LENGTH } from "@/domains/search/hooks/useSearch";
 import { SearchResultList } from "@/domains/search/components/SearchResultList";
 import { Pagination } from "@/domains/search/components/Pagination";
@@ -32,20 +32,6 @@ export function SearchModal() {
     setIsOpen(false);
     reset();
   };
-
-  useEffect(() => {
-    // 로그아웃하면 열려 있던 검색 패널을 닫고 결과를 초기화한다.
-    const handleAuthCleared = () => {
-      setIsOpen(false);
-      reset();
-    };
-
-    window.addEventListener("auth-cleared", handleAuthCleared);
-
-    return () => {
-      window.removeEventListener("auth-cleared", handleAuthCleared);
-    };
-  }, [reset]);
 
   if (!isOpen) {
     return (
