@@ -235,7 +235,7 @@ export function DiaryWriteModal({
                 }
                 className="flex-1 bg-[#F97316] text-white rounded-full py-3 font-medium disabled:opacity-40 cursor-pointer"
               >
-                생성
+                작성
               </button>
               <button
                 onClick={handleRequestClose}
