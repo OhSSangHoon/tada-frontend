@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
-  fetchStickers,
+  getStickers,
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
   DEFAULT_SORT,
@@ -16,7 +16,7 @@ export function useStickers(isOpen: boolean) {
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["stickers", sort, page],
-    queryFn: () => fetchStickers({ sort, page, size: DEFAULT_PAGE_SIZE }),
+    queryFn: () => getStickers({ sort, page, size: DEFAULT_PAGE_SIZE }),
     placeholderData: keepPreviousData,
     enabled: isOpen,
   });

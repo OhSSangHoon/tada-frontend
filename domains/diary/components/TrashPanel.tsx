@@ -10,7 +10,7 @@ import {
   SidePanelBody,
   SidePanelHeader,
 } from "@/shared/components/side-panel/SidePanelParts";
-import { Pagination } from "@/domains/search/components/Pagination";
+import { Pagination } from "@/shared/components/Pagination";
 import { ApiError } from "@/shared/lib/api-client";
 import { formatDisplayDate, formatShortDate } from "@/domains/diary/utils/date";
 import type { TrashedDiaryResponse } from "@/domains/diary/types/diary";
@@ -139,7 +139,7 @@ export function TrashPanel({ isOpen }: TrashPanelProps) {
           {pageDiaries.map((diary) => (
             <li
               key={diary.id}
-              className="flex h-[120px] gap-3 overflow-hidden rounded-2xl border border-gray-200 p-3"
+              className="flex h-30 gap-3 overflow-hidden rounded-2xl border border-gray-200 p-3"
             >
               <div className="relative h-24 w-24 shrink-0 rounded-xl bg-[#FFF7ED]">
                 {diary.imageUrl && (
@@ -193,6 +193,7 @@ export function TrashPanel({ isOpen }: TrashPanelProps) {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setPage}
+            ariaLabel="휴지통 페이지네이션"
           />
         </div>
       )}
