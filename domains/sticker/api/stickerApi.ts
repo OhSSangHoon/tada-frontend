@@ -4,7 +4,7 @@ import type {
   StickerSortOption,
 } from "@/domains/sticker/types/sticker";
 
-interface FetchStickersParams {
+interface GetStickersParams {
   page?: number;
   size?: number;
   sort?: StickerSortOption;
@@ -18,7 +18,7 @@ export function getStickers({
   page = DEFAULT_PAGE,
   size = DEFAULT_PAGE_SIZE,
   sort = DEFAULT_SORT,
-}: FetchStickersParams = {}) {
+}: GetStickersParams = {}) {
   const params = new URLSearchParams({
     page: String(page),
     size: String(size),

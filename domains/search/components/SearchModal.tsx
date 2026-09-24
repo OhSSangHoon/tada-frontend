@@ -67,7 +67,7 @@ export function SearchModal() {
 
   return (
     <>
-      <div className="fixed bottom-6 left-6 z-50 flex h-[560px] w-96 flex-col overflow-hidden bg-white">
+      <div className="fixed bottom-6 left-6 z-50 flex h-140 w-96 flex-col overflow-hidden bg-white">
         <div className="flex items-center justify-between px-4 pt-4">
           <span className="text-base font-semibold text-gray-900">
             검색어를 입력해주세요
@@ -206,6 +206,7 @@ export function SearchModal() {
               currentPage={page}
               totalPages={data.totalPages}
               onPageChange={goToPage}
+              ariaLabel="검색 결과 페이지네이션"
             />
           </div>
         )}

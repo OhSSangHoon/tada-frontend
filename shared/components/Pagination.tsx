@@ -2,11 +2,10 @@ interface PaginationProps {
   currentPage: number; // 0-base
   totalPages: number;
   onPageChange: (page: number) => void;
-  ariaLabel?: string;
+  ariaLabel: string;
 }
 
 const MAX_VISIBLE_PAGES = 5;
-const DEFAULT_ARIA_LABEL = "검색 결과 페이지네이션";
 
 function getVisiblePages(current: number, total: number): number[] {
   if (total <= MAX_VISIBLE_PAGES) {
@@ -53,7 +52,7 @@ export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-  ariaLabel = DEFAULT_ARIA_LABEL,
+  ariaLabel,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
