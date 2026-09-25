@@ -11,7 +11,7 @@ export function useCorrectPerson() {
       correctPerson(personId, candidateId, request),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: ["persons"],
       });
     },

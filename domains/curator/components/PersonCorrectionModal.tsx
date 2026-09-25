@@ -13,6 +13,8 @@ interface PersonCorrectionModalProps {
   currentPersonId: string;
   currentPersonName: string;
   item: PersonTimelineItemResponse;
+  onPendingChange: (isPending: boolean) => void;
+  onCorrected: () => void;
   onClose: () => void;
 }
 
@@ -22,6 +24,8 @@ export function PersonCorrectionModal({
   currentPersonId,
   currentPersonName,
   item,
+  onPendingChange,
+  onCorrected,
   onClose,
 }: PersonCorrectionModalProps) {
   const initialCandidateId =
@@ -50,6 +54,35 @@ export function PersonCorrectionModal({
     error,
     reset,
   } = useCorrectPerson();
+
+  useEffect(() => {
+    onPendingChange(isPending);
+
+    return () => {
+      onPendingChange(false);
+    };
+  }, [isPending, onPendingChange]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (!isPending) {
+        onClose();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [isPending, onClose]);
 
   useEffect(() => {
     return () => {
@@ -125,6 +158,7 @@ export function PersonCorrectionModal({
         });
       }
 
+      onCorrected();
       onClose();
     } catch {
       // mutation error는 아래 UI에서 표시한다.
@@ -147,10 +181,10 @@ export function PersonCorrectionModal({
         }
       }}
     >
-      <div className="w-full max-w-[520px] rounded-[24px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-[540px] rounded-[28px] bg-white p-7 shadow-[0_24px_80px_rgba(0,0,0,0.24)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-[20px] font-bold text-[#40312E]">
+            <h3 className="text-[22px] font-bold tracking-[-0.02em] text-[#40312E]">
               이 사람 아니에요
             </h3>
 
@@ -174,7 +208,7 @@ export function PersonCorrectionModal({
           </button>
         </div>
 
-        <section className="mt-6">
+        <section className="mt-7">
           <p className="text-[13px] font-bold text-[#5F5651]">
             어떤 표현을 수정할까요?
           </p>
@@ -205,7 +239,7 @@ export function PersonCorrectionModal({
             누구로 변경할까요?
           </p>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="mt-3 grid grid-cols-2 rounded-[14px] bg-[#F6F3F1] p-1">
             <ModeButton
               active={mode === "EXISTING"}
               onClick={() => {
@@ -313,12 +347,12 @@ export function PersonCorrectionModal({
           </p>
         )}
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-7 flex justify-end gap-2 border-t border-[#EEE9E6] pt-5">
           <button
             type="button"
             disabled={isPending}
             onClick={onClose}
-            className="rounded-xl bg-[#F5F0ED] px-4 py-2.5 text-[13px] font-bold text-[#746A65] transition hover:bg-[#EEE7E3] disabled:opacity-50"
+            className="h-11 min-w-[72px] rounded-xl bg-[#F5F0ED] px-4 text-[13px] font-bold text-[#746A65] transition hover:bg-[#EEE7E3] disabled:opacity-50"
           >
             취소
           </button>
@@ -327,7 +361,7 @@ export function PersonCorrectionModal({
             type="button"
             disabled={isPending || item.personCandidates.length === 0}
             onClick={() => void handleSubmit()}
-            className="rounded-xl bg-[#F97316] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#EA6A0B] disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-w-[82px] rounded-xl bg-[#F97316] px-4 text-[13px] font-bold text-white shadow-[0_5px_14px_rgba(249,115,22,0.2)] transition hover:bg-[#EA6A0B] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? "변경 중..." : "변경"}
           </button>
@@ -348,9 +382,9 @@ function CandidateRow({ candidate, selected, onClick }: CandidateRowProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+      className={`flex w-full items-center justify-between rounded-[14px] border px-4 py-3.5 text-left transition ${
         selected
-          ? "border-[#F97316] bg-[#FFF7ED]"
+          ? "border-[#F97316] bg-[#FFF7ED] shadow-[0_3px_12px_rgba(249,115,22,0.08)]"
           : "border-[#EEE6E1] bg-white hover:border-[#F6C9A9]"
       }`}
     >
@@ -359,7 +393,8 @@ function CandidateRow({ candidate, selected, onClick }: CandidateRowProps) {
       </span>
 
       {selected && (
-        <span className="ml-3 shrink-0 text-[12px] font-bold text-[#F97316]">
+        <span className="ml-3 inline-flex shrink-0 items-center gap-1.5 text-[12px] font-bold text-[#F97316]">
+          <CheckIcon />
           선택됨
         </span>
       )}
@@ -378,14 +413,31 @@ function ModeButton({ active, onClick, children }: ModeButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border px-3 py-2.5 text-[13px] font-bold transition ${
+      className={`rounded-[10px] px-3 py-2.5 text-[13px] font-bold transition ${
         active
-          ? "border-[#F97316] bg-[#FFF7ED] text-[#F97316]"
-          : "border-[#EEE6E1] bg-white text-[#7E746F] hover:border-[#F6C9A9]"
+          ? "bg-white text-[#F97316] shadow-[0_2px_8px_rgba(64,49,46,0.08)]"
+          : "text-[#7E746F] hover:text-[#F97316]"
       }`}
     >
       {children}
     </button>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m5 12 4 4L19 6" />
+    </svg>
   );
 }
 

@@ -12,13 +12,21 @@ import {
 } from "react";
 
 import { PersonCorrectionModal } from "@/domains/curator/components/PersonCorrectionModal";
+import { PersonMemoryTab } from "@/domains/curator/components/PersonMemoryTab";
 import { PersonRecordTab } from "@/domains/curator/components/PersonRecordTab";
 import { usePersonDetail } from "@/domains/curator/hooks/usePersonDetail";
 import { useRenamePerson } from "@/domains/curator/hooks/useRenamePerson";
-import type { PersonTimelineItemResponse } from "@/domains/curator/types/curator";
 import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
+import { ApiError } from "@/shared/lib/api-client";
+
+import type {
+  PersonMemoryDiaryResponse,
+  PersonTimelineItemResponse,
+} from "@/domains/curator/types/curator";
 
 const FALLBACK_STICKER_IMAGE = "/stickers/goodday.png";
+
+type PersonDetailTab = "RECORD" | "MEMORY";
 
 interface PersonDetailModalProps {
   personId: string;
@@ -29,13 +37,22 @@ export function PersonDetailModal({
   personId,
   onClose,
 }: PersonDetailModalProps) {
+  const [activeTab, setActiveTab] = useState<PersonDetailTab>("RECORD");
   const [isScrolling, setIsScrolling] = useState(false);
 
   const [selectedDiary, setSelectedDiary] =
     useState<PersonTimelineItemResponse | null>(null);
 
+  const [selectedMemoryDiary, setSelectedMemoryDiary] =
+    useState<PersonMemoryDiaryResponse | null>(null);
+
   const [correctionItem, setCorrectionItem] =
     useState<PersonTimelineItemResponse | null>(null);
+  const [isCorrectionPending, setIsCorrectionPending] = useState(false);
+  const [openTimelineMenuDiaryId, setOpenTimelineMenuDiaryId] = useState<
+    string | null
+  >(null);
+  const [closeIfPersonMissing, setCloseIfPersonMissing] = useState(false);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -50,6 +67,8 @@ export function PersonDetailModal({
     data: person,
     isLoading,
     isError,
+    isFetching,
+    error: detailError,
     refetch,
   } = usePersonDetail(personId);
 
@@ -61,6 +80,10 @@ export function PersonDetailModal({
   } = useRenamePerson(personId);
 
   const cancelNameEdit = useCallback(() => {
+    if (isRenaming) {
+      return;
+    }
+
     setIsEditingName(false);
     setNameValidationError(null);
     resetRename();
@@ -68,7 +91,26 @@ export function PersonDetailModal({
     if (person) {
       setNameDraft(person.displayName);
     }
-  }, [person, resetRename]);
+  }, [isRenaming, person, resetRename]);
+
+  useEffect(() => {
+    if (!closeIfPersonMissing || isFetching) {
+      return;
+    }
+
+    if (detailError instanceof ApiError && detailError.status === 404) {
+      onClose();
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setCloseIfPersonMissing(false);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [closeIfPersonMissing, detailError, isFetching, onClose]);
 
   useEffect(() => {
     if (!isEditingName) {
@@ -89,7 +131,16 @@ export function PersonDetailModal({
       event.stopImmediatePropagation();
 
       if (correctionItem) {
+        if (isCorrectionPending) {
+          return;
+        }
+
         setCorrectionItem(null);
+        return;
+      }
+
+      if (selectedMemoryDiary) {
+        setSelectedMemoryDiary(null);
         return;
       }
 
@@ -98,7 +149,16 @@ export function PersonDetailModal({
         return;
       }
 
+      if (openTimelineMenuDiaryId) {
+        setOpenTimelineMenuDiaryId(null);
+        return;
+      }
+
       if (isEditingName) {
+        if (isRenaming) {
+          return;
+        }
+
         cancelNameEdit();
         return;
       }
@@ -114,9 +174,13 @@ export function PersonDetailModal({
   }, [
     cancelNameEdit,
     correctionItem,
+    isCorrectionPending,
     isEditingName,
+    isRenaming,
     onClose,
+    openTimelineMenuDiaryId,
     selectedDiary,
+    selectedMemoryDiary,
   ]);
 
   useEffect(() => {
@@ -180,7 +244,7 @@ export function PersonDetailModal({
       setIsEditingName(false);
       setNameDraft(trimmedName);
     } catch {
-      // mutation error는 아래 UI에서 표시한다.
+      // mutation error는 UI에서 표시한다.
     }
   }
 
@@ -196,35 +260,35 @@ export function PersonDetailModal({
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-6 backdrop-blur-[2px]"
         onMouseDown={(event) => {
-          if (event.target === event.currentTarget) {
+          if (event.target === event.currentTarget && !isRenaming) {
             onClose();
           }
         }}
       >
-        <div className="flex max-h-[90vh] w-full max-w-[780px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl">
+        <div className="flex max-h-[90vh] w-full max-w-[820px] flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
           {isLoading ? (
             <DetailSkeleton />
           ) : isError || !person ? (
             <DetailError onClose={onClose} onRetry={() => void refetch()} />
           ) : (
             <>
-              <header className="shrink-0 border-b border-[#F1ECE8] px-7 pb-6 pt-7">
+              <header className="shrink-0 bg-white px-7 pb-5 pt-6">
                 <div className="flex items-start gap-5">
-                  <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-[28px] bg-[#FFF7ED] ring-1 ring-[#F2E2D8]">
+                  <div className="relative h-[100px] w-[100px] shrink-0 overflow-hidden rounded-[22px] bg-[#FFF7ED]">
                     {person.stickerUrl ? (
                       <Image
                         src={person.stickerUrl}
                         alt=""
                         fill
-                        sizes="88px"
-                        className="object-cover"
+                        sizes="100px"
+                        className="object-contain p-1"
                       />
                     ) : (
                       <PersonPlaceholder />
                     )}
                   </div>
 
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 pt-0.5">
                     <div className="flex items-start gap-3">
                       <div className="min-w-0 flex-1">
                         {isEditingName ? (
@@ -249,13 +313,13 @@ export function PersonDetailModal({
                                   }
                                 }}
                                 aria-label="사람 이름"
-                                className="min-w-0 flex-1 rounded-xl border border-[#E7DDD7] bg-white px-3 py-2 text-[22px] font-bold tracking-[-0.02em] text-[#40312E] outline-none transition focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/10 disabled:bg-[#F8F5F3]"
+                                className="min-w-0 flex-1 rounded-xl border border-[#E7DDD7] bg-white px-3 py-2 text-[22px] font-bold text-[#40312E] outline-none focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/10"
                               />
 
                               <button
                                 type="submit"
                                 disabled={isRenaming}
-                                className="shrink-0 rounded-xl bg-[#F97316] px-3 py-2 text-[12px] font-bold text-white transition hover:bg-[#EA6A0B] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="rounded-xl bg-[#F97316] px-3 py-2 text-[11px] font-bold text-white disabled:opacity-60"
                               >
                                 {isRenaming ? "저장 중" : "저장"}
                               </button>
@@ -264,21 +328,21 @@ export function PersonDetailModal({
                                 type="button"
                                 disabled={isRenaming}
                                 onClick={cancelNameEdit}
-                                className="shrink-0 rounded-xl bg-[#F5F0ED] px-3 py-2 text-[12px] font-bold text-[#746A65] transition hover:bg-[#EEE7E3] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="rounded-xl bg-[#F5F2F0] px-3 py-2 text-[11px] font-bold text-[#746A65] disabled:opacity-60"
                               >
                                 취소
                               </button>
                             </div>
 
                             {(nameValidationError || renameErrorMessage) && (
-                              <p className="mt-2 text-[12px] font-medium text-red-500">
+                              <p className="mt-2 text-[11px] font-medium text-red-500">
                                 {nameValidationError ?? renameErrorMessage}
                               </p>
                             )}
                           </form>
                         ) : (
                           <div className="flex min-w-0 items-center gap-2">
-                            <h2 className="truncate text-[26px] font-bold tracking-[-0.02em] text-[#40312E]">
+                            <h2 className="truncate text-[28px] font-bold tracking-[-0.03em] text-[#40312E]">
                               {person.displayName}
                               {getWaGwa(person.displayName)}의 기록
                             </h2>
@@ -288,14 +352,14 @@ export function PersonDetailModal({
                               onClick={beginNameEdit}
                               aria-label={`${person.displayName} 이름 수정`}
                               title="이름 수정"
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#A09792] transition hover:bg-[#FFF3E8] hover:text-[#F97316]"
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-[#9E948F] transition hover:bg-[#FFF3E8] hover:text-[#F97316]"
                             >
                               <EditIcon />
                             </button>
                           </div>
                         )}
 
-                        <p className="mt-1 text-[13px] text-[#978D88]">
+                        <p className="mt-1.5 text-[13px] text-[#7E746F]">
                           일기에 남은 {person.displayName}
                           {getWaGwa(person.displayName)} 함께한 순간들을
                           모아봤어요.
@@ -305,25 +369,27 @@ export function PersonDetailModal({
                       <button
                         type="button"
                         aria-label="사람 상세 닫기"
+                        disabled={isRenaming}
                         onClick={onClose}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#776D68] transition hover:bg-[#FFF7ED] hover:text-[#F97316]"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#776D68] transition hover:bg-[#F8F5F3] hover:text-[#F97316] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <CloseIcon />
                       </button>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[#857B76]">
-                      <StatText
+                    <div className="mt-5 flex items-center divide-x divide-[#EEE9E6]">
+                      <StatItem
                         label="함께한 기록"
                         value={`${person.mentionCount}개`}
+                        accent
                       />
 
-                      <StatText
+                      <StatItem
                         label="첫 기록"
                         value={formatNullableDate(person.firstMentionedAt)}
                       />
 
-                      <StatText
+                      <StatItem
                         label="최근 기록"
                         value={formatNullableDate(person.lastMentionedAt)}
                       />
@@ -331,14 +397,14 @@ export function PersonDetailModal({
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-5">
-                  <KeywordSection
+                <div className="mt-5 grid grid-cols-2 divide-x divide-[#EEE5DF] rounded-[18px] bg-[#FFFBF8] px-2 py-3">
+                  <KeywordStrip
                     title="함께한 장소"
                     icon={<LocationIcon />}
                     items={person.topPlaces}
                   />
 
-                  <KeywordSection
+                  <KeywordStrip
                     title="함께한 활동"
                     icon={<ActivityIcon />}
                     items={person.topActivities}
@@ -346,46 +412,59 @@ export function PersonDetailModal({
                 </div>
               </header>
 
-              <nav
-                aria-label="사람 상세 탭"
-                className="shrink-0 border-b border-[#F1ECE8] px-7"
-              >
+              <nav className="shrink-0 border-b border-[#EEE9E6] px-7">
                 <div className="flex gap-8">
-                  <button
-                    type="button"
-                    className="border-b-[3px] border-[#F97316] px-1 py-4 text-[14px] font-bold text-[#F97316]"
+                  <TabButton
+                    active={activeTab === "RECORD"}
+                    onClick={() => {
+                      setOpenTimelineMenuDiaryId(null);
+                      setActiveTab("RECORD");
+                    }}
                   >
                     기록
-                  </button>
+                  </TabButton>
 
-                  <button
-                    type="button"
-                    disabled
-                    title="다음 단계에서 연결됩니다."
-                    className="cursor-not-allowed border-b-[3px] border-transparent px-1 py-4 text-[14px] font-semibold text-[#B8B0AC]"
+                  <TabButton
+                    active={activeTab === "MEMORY"}
+                    onClick={() => {
+                      setOpenTimelineMenuDiaryId(null);
+                      setActiveTab("MEMORY");
+                    }}
                   >
                     추억
-                  </button>
+                  </TabButton>
                 </div>
               </nav>
 
               <div
                 onScroll={handleScroll}
-                className={`min-h-0 flex-1 overflow-auto px-7 py-6
+                className={`
+                  min-h-0 flex-1 overflow-y-auto bg-white px-7 py-4
                   [&::-webkit-scrollbar]:w-2
                   [&::-webkit-scrollbar-track]:bg-transparent
                   [&::-webkit-scrollbar-thumb]:rounded-full
-                  ${isScrolling
-                    ? "[&::-webkit-scrollbar-thumb]:bg-[#A89E98]"
-                    : "[&::-webkit-scrollbar-thumb]:bg-transparent"
+                  ${
+                    isScrolling
+                      ? "[&::-webkit-scrollbar-thumb]:bg-[#AEA49F]"
+                      : "[&::-webkit-scrollbar-thumb]:bg-transparent"
                   }
                 `}
               >
-                <PersonRecordTab
-                  personId={personId}
-                  onDiaryOpen={setSelectedDiary}
-                  onCorrectionRequest={setCorrectionItem}
-                />
+                {activeTab === "RECORD" ? (
+                  <PersonRecordTab
+                    personId={personId}
+                    openMenuDiaryId={openTimelineMenuDiaryId}
+                    onOpenMenuDiaryIdChange={setOpenTimelineMenuDiaryId}
+                    onDiaryOpen={setSelectedDiary}
+                    onCorrectionRequest={setCorrectionItem}
+                  />
+                ) : (
+                  <PersonMemoryTab
+                    personId={personId}
+                    displayName={person.displayName}
+                    onDiaryOpen={setSelectedMemoryDiary}
+                  />
+                )}
               </div>
             </>
           )}
@@ -400,12 +479,25 @@ export function PersonDetailModal({
         />
       )}
 
+      {selectedMemoryDiary && (
+        <DiaryDetailModal
+          diaryId={selectedMemoryDiary.id}
+          imageUrl={selectedMemoryDiary.stickerUrl ?? FALLBACK_STICKER_IMAGE}
+          onClose={() => setSelectedMemoryDiary(null)}
+        />
+      )}
+
       {correctionItem && person && (
         <PersonCorrectionModal
           currentPersonId={personId}
           currentPersonName={person.displayName}
           item={correctionItem}
-          onClose={() => setCorrectionItem(null)}
+          onPendingChange={setIsCorrectionPending}
+          onCorrected={() => setCloseIfPersonMissing(true)}
+          onClose={() => {
+            setIsCorrectionPending(false);
+            setCorrectionItem(null);
+          }}
         />
       )}
     </>,
@@ -413,20 +505,29 @@ export function PersonDetailModal({
   );
 }
 
-interface StatTextProps {
+interface StatItemProps {
   label: string;
   value: string;
+  accent?: boolean;
 }
 
-function StatText({ label, value }: StatTextProps) {
+function StatItem({ label, value, accent = false }: StatItemProps) {
   return (
-    <span>
-      {label} <strong className="font-bold text-[#40312E]">{value}</strong>
-    </span>
+    <div className="min-w-0 flex-1 px-4 first:pl-0">
+      <p className="text-[11px] font-medium text-[#7E746F]">{label}</p>
+
+      <p
+        className={`mt-1 truncate text-[15px] font-bold ${
+          accent ? "text-[#F97316]" : "text-[#40312E]"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
 
-interface KeywordSectionProps {
+interface KeywordStripProps {
   title: string;
   icon: ReactNode;
   items: {
@@ -435,31 +536,55 @@ interface KeywordSectionProps {
   }[];
 }
 
-function KeywordSection({ title, icon, items }: KeywordSectionProps) {
+function KeywordStrip({ title, icon, items }: KeywordStripProps) {
   return (
-    <section className="rounded-2xl bg-[#FBF8F6] px-4 py-4">
-      <div className="flex items-center gap-2">
-        <span className="text-[#F97316]">{icon}</span>
-
-        <p className="text-[12px] font-bold text-[#746A65]">{title}</p>
+    <section className="flex min-h-[58px] items-center gap-3 px-4">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFF0E4] text-[#F97316]">
+        {icon}
       </div>
 
-      <div className="mt-3 flex min-h-8 flex-wrap gap-2">
-        {items.length === 0 ? (
-          <span className="text-[12px] text-[#B6ADA8]">아직 없어요</span>
-        ) : (
-          items.slice(0, 3).map((item) => (
-            <span
-              key={item.normalizedText}
-              title={`${item.normalizedText} · ${item.diaryCount}개 기록`}
-              className="max-w-[150px] truncate rounded-full border border-[#EFE4DD] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#675E59]"
-            >
-              {item.normalizedText}
-            </span>
-          ))
-        )}
+      <div className="min-w-0 flex-1">
+        <p className="text-[12px] font-bold text-[#40312E]">{title}</p>
+
+        <div className="mt-1.5 flex min-w-0 gap-1.5 overflow-hidden">
+          {items.length === 0 ? (
+            <span className="text-[11px] text-[#8B817C]">아직 없어요</span>
+          ) : (
+            items.slice(0, 3).map((item) => (
+              <span
+                key={item.normalizedText}
+                title={item.normalizedText}
+                className="max-w-[92px] truncate rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-[#665D58] shadow-[0_1px_4px_rgba(64,49,46,0.05)]"
+              >
+                {item.normalizedText}
+              </span>
+            ))
+          )}
+        </div>
       </div>
     </section>
+  );
+}
+
+interface TabButtonProps {
+  active: boolean;
+  onClick: () => void;
+  children: string;
+}
+
+function TabButton({ active, onClick, children }: TabButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`border-b-[3px] px-1 py-3.5 text-[14px] font-bold transition ${
+        active
+          ? "border-[#F97316] text-[#F97316]"
+          : "border-transparent text-[#9B918C] hover:text-[#F97316]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -475,9 +600,7 @@ function DetailError({ onClose, onRetry }: DetailErrorProps) {
         사람 정보를 불러오지 못했어요
       </p>
 
-      <p className="mt-1 text-sm text-[#958B86]">
-        잠시 후 다시 시도해 주세요.
-      </p>
+      <p className="mt-1 text-sm text-[#958B86]">잠시 후 다시 시도해 주세요.</p>
 
       <div className="mt-5 flex gap-2">
         <button
@@ -544,8 +667,8 @@ function ActivityIcon() {
       stroke="currentColor"
       strokeWidth="1.8"
     >
-      <path d="M5 12h14M12 5v14" />
       <circle cx="12" cy="12" r="8" />
+      <path d="M8 12h8M12 8v8" />
     </svg>
   );
 }
@@ -555,7 +678,7 @@ function EditIcon() {
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-[17px] w-[17px]"
+      className="h-[16px] w-[16px]"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -585,36 +708,27 @@ function CloseIcon() {
 
 function DetailSkeleton() {
   return (
-    <div className="min-h-[650px] animate-pulse">
-      <div className="border-b border-[#F1ECE8] px-7 pb-6 pt-7">
-        <div className="flex gap-5">
-          <div className="h-[88px] w-[88px] rounded-[28px] bg-[#F5F0ED]" />
+    <div className="min-h-[650px] animate-pulse p-7">
+      <div className="flex gap-5">
+        <div className="h-[100px] w-[100px] rounded-[22px] bg-[#F5F0ED]" />
 
-          <div className="flex-1">
-            <div className="h-7 w-48 rounded bg-[#F0EAE6]" />
-            <div className="mt-3 h-3 w-60 rounded bg-[#F5F0ED]" />
-
-            <div className="mt-5 flex gap-4">
-              <div className="h-4 w-24 rounded bg-[#F5F0ED]" />
-              <div className="h-4 w-28 rounded bg-[#F5F0ED]" />
-              <div className="h-4 w-28 rounded bg-[#F5F0ED]" />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-5">
-          <div className="h-[88px] rounded-2xl bg-[#F8F5F3]" />
-          <div className="h-[88px] rounded-2xl bg-[#F8F5F3]" />
+        <div className="flex-1">
+          <div className="h-7 w-48 rounded bg-[#EEE9E6]" />
+          <div className="mt-3 h-3 w-56 rounded bg-[#F5F0ED]" />
+          <div className="mt-6 h-10 w-full rounded bg-[#F8F5F3]" />
         </div>
       </div>
 
-      <div className="border-b border-[#F1ECE8] px-7 py-4">
-        <div className="h-5 w-14 rounded bg-[#F0EAE6]" />
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="h-[62px] rounded-[14px] bg-[#F8F5F3]" />
+        <div className="h-[62px] rounded-[14px] bg-[#F8F5F3]" />
       </div>
 
-      <div className="space-y-4 px-7 py-6">
-        {Array.from({ length: 3 }, (_, index) => (
-          <div key={index} className="h-[112px] rounded-2xl bg-[#F8F5F3]" />
+      <div className="mt-5 h-10 rounded bg-[#F5F0ED]" />
+
+      <div className="mt-5 space-y-3">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="h-[78px] rounded-xl bg-[#F8F5F3]" />
         ))}
       </div>
     </div>
@@ -642,7 +756,5 @@ function getWaGwa(name: string) {
     return "와";
   }
 
-  const jongseong = (code - 0xac00) % 28;
-
-  return jongseong === 0 ? "와" : "과";
+  return (code - 0xac00) % 28 === 0 ? "와" : "과";
 }

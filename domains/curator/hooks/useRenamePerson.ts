@@ -11,7 +11,7 @@ export function useRenamePerson(personId: string) {
       renamePerson(personId, request),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: ["persons"],
       });
     },
