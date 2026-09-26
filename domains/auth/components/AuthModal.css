@@ -1,0 +1,231 @@
+/* 화면 전체 어둡게 */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+/* 모달 전체 */
+.auth-modal {
+  position: relative;
+
+  display: flex;
+
+  width: min(680px, 94vw);
+  min-height: 450px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+  border-radius: 22px;
+
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+
+  animation: authModalOpen 0.2s ease-out;
+}
+
+/* =========================
+   왼쪽 영역
+========================= */
+
+.auth-modal-left {
+  position: relative;
+
+  width: 40%;
+  min-width: 250px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 36px 28px;
+
+  background:#fff5ed;
+
+}
+
+.auth-logo-area {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+/* 실제 TADA 로고 */
+.auth-logo {
+  width: 180px;
+  height: auto;
+
+  object-fit: contain;
+
+  margin-bottom: 24px;
+}
+
+.auth-logo-description {
+  margin: 0;
+
+  color: #4e5659;
+
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.7;
+  font-family: var(--font-kyobo-handwriting);
+
+  letter-spacing: -0.3px;
+
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* =========================
+   오른쪽 영역
+========================= */
+
+.auth-modal-right {
+  position: relative;
+
+  width: 60%;
+
+  padding: 38px 44px 36px;
+
+  background: #ffffff;
+}
+
+/* X 버튼 */
+.auth-close-button {
+  position: absolute;
+
+  top: 17px;
+  right: 20px;
+
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #9a9a9a;
+
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.auth-close-button:hover {
+  color: #555555;
+  transform: scale(1.05);
+}
+
+/* Login / Signup 탭 */
+.auth-tabs {
+  display: flex;
+
+  gap: 28px;
+
+  margin-bottom: 28px;
+
+  border-bottom: 1px solid #eeeeee;
+}
+
+.auth-tab {
+  position: relative;
+
+  padding: 0 2px 12px;
+
+  border: none;
+  background: transparent;
+
+  color: #aaaaaa;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+}
+
+.auth-tab:hover {
+  color: #ff8f55;
+}
+
+.auth-tab.active {
+  color: #ff8750;
+}
+
+.auth-tab.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: -1px;
+
+  height: 2px;
+
+  background: #ff8750;
+  border-radius: 999px;
+}
+
+/* Form 들어가는 곳 */
+.auth-form-area {
+  width: 100%;
+}
+
+/* 등장 애니메이션 */
+@keyframes authModalOpen {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 작은 화면 */
+@media (max-width: 650px) {
+  .auth-modal {
+    width: min(410px, 94vw);
+  }
+
+  .auth-modal-left {
+    display: none;
+  }
+
+  .auth-modal-right {
+    width: 100%;
+
+    padding: 40px 32px 34px;
+  }
+}
+
