@@ -88,7 +88,7 @@ export function GuestLandingPage({ onGetStarted }: GuestLandingPageProps) {
           </div>
 
           {/* 오른쪽 스티커 미리보기 카드 - 한 단계 더 확대 + 우측 상단으로 50px 이동 */}
-          <div className="relative w-full max-w-lg shrink-0 rotate-2 translate-x-[50px] -translate-y-[50px] rounded-3xl bg-[#FDF6EC] p-12 shadow-2xl md:w-[36rem]">
+          <div className="relative w-full max-w-lg shrink-0 rotate-2 translate-x-12.5 -translate-y-12.5 rounded-3xl bg-[#FDF6EC] p-12 shadow-2xl md:w-xl">
             <div className="absolute -top-5 left-12 h-6 w-28 rounded-sm bg-yellow-300" />
             {/* 커피 스티커 - 카드 우측 상단에 살짝 겹치게 배치 */}
             <img
@@ -161,11 +161,6 @@ export function GuestLandingPage({ onGetStarted }: GuestLandingPageProps) {
           </button>
         </div>
       </section>
-
-      {/* 푸터 */}
-      <footer className="mx-auto max-w-6xl px-6 py-10 text-center text-xs text-white/40">
-        © {new Date().getFullYear()} TADA. All rights reserved.
-      </footer>
     </div>
   );
 }
