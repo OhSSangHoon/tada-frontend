@@ -12,12 +12,15 @@ import { SignupForm } from "@/domains/auth/components/SignupForm";
 //부모 컴포넌트에서 전달받을 값을 정의한다.
 interface AuthModalProps {
   onClose: () => void;
+
+  // 모달을 열 때 처음 보여줄 화면
+  initialMode?: "login" | "signup";
 }
 
 //인증 모달 컴포넌트
-export function AuthModal({ onClose }: AuthModalProps) {
+export function AuthModal({ onClose, initialMode = "login" }: AuthModalProps) {
   // 현재 모달이 로그인 화면인지 회원가입 화면인지 관리한다.
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
 
   return (
     // 화면 전체를 덮는 모달 배경
