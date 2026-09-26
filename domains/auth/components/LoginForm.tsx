@@ -93,7 +93,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         disabled={loginMutation.isPending}
         className="
           relative flex h-11 w-full items-center justify-center
-          rounded-lg bg-gradient-to-r from-[#ff8a45] to-[#ff6938]
+          rounded-lg bg-linear-to-r from-[#ff8a45] to-[#ff6938]
           text-sm font-semibold text-white transition
           hover:opacity-90 disabled:opacity-60
         "
@@ -127,7 +127,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                onClick={() => socialLogin("google")}
                aria-label="Google 로그인"
                className="
-                 flex h-[64px] w-[64px] items-center justify-center
+                 flex h-16 w-16 items-center justify-center
                  rounded-full border border-gray-200
                  bg-white shadow-sm
                  transition hover:-translate-y-0.5 hover:shadow-md
@@ -143,7 +143,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                onClick={() => socialLogin("kakao")}
                aria-label="Kakao 로그인"
                className="
-                 flex h-[64px] w-[64px] items-center justify-center
+                 flex h-16 w-16 items-center justify-center
                  rounded-full border border-gray-200
                  bg-white shadow-sm
                  transition hover:-translate-y-0.5 hover:shadow-md
@@ -151,7 +151,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
              >
                <span
                  className="
-                   flex h-[40px] w-[40px] items-center justify-center
+                   flex h-10 w-10 items-center justify-center
                    rounded-full bg-[#FEE500]
                    text-[18px] font-bold text-[#191919]
                  "
@@ -165,7 +165,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                onClick={() => socialLogin("naver")}
                aria-label="Naver 로그인"
                className="
-                 flex h-[64px] w-[64px] items-center justify-center
+                 flex h-16 w-16 items-center justify-center
                  rounded-full border border-gray-200
                  bg-white shadow-sm
                  transition hover:-translate-y-0.5 hover:shadow-md
