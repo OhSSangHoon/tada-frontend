@@ -43,6 +43,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type="text"
           value={loginId}
           onChange={(event) => setLoginId(event.target.value)}
+          aria-label="아이디"
           placeholder="아이디"
           required
           className="
@@ -65,6 +66,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          aria-label="비밀번호"
           placeholder="비밀번호"
           required
           className="

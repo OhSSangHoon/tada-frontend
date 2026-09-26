@@ -50,7 +50,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           onClick={onSuccess}
           className="
             h-11 w-full rounded-lg
-            bg-gradient-to-r from-[#ff8a45] to-[#ff6938]
+            bg-linear-to-r from-[#ff8a45] to-[#ff6938]
             text-sm font-semibold text-white
           "
         >
@@ -67,6 +67,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         type="text"
         value={loginId}
         onChange={(event) => setLoginId(event.target.value)}
+        aria-label="아이디"
         placeholder="아이디"
         required
         className="
@@ -82,6 +83,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          aria-label="비밀번호"
           placeholder="비밀번호"
           required
           className="
@@ -94,6 +96,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
+          aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
           className="absolute inset-y-0 right-3 text-xs text-gray-500"
         >
           {showPassword ? "숨김" : "보기"}
@@ -106,6 +109,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           type={showPasswordConfirm ? "text" : "password"}
           value={passwordConfirm}
           onChange={(event) => setPasswordConfirm(event.target.value)}
+          aria-label="비밀번호 확인"
           placeholder="비밀번호 확인"
           required
           className="
@@ -118,6 +122,9 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         <button
           type="button"
           onClick={() => setShowPasswordConfirm((prev) => !prev)}
+          aria-label={
+            showPasswordConfirm ? "비밀번호 확인 숨기기" : "비밀번호 확인 보기"
+          }
           className="absolute inset-y-0 right-3 text-xs text-gray-500"
         >
           {showPasswordConfirm ? "숨김" : "보기"}
@@ -129,6 +136,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         type="text"
         value={nickname}
         onChange={(event) => setNickname(event.target.value)}
+        aria-label="닉네임"
         placeholder="닉네임"
         required
         className="
@@ -152,7 +160,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         }
         className="
           relative flex h-11 w-full items-center justify-center
-          rounded-lg bg-gradient-to-r from-[#ff8a45] to-[#ff6938]
+          rounded-lg bg-linear-to-r from-[#ff8a45] to-[#ff6938]
           text-sm font-semibold text-white
           disabled:opacity-60
         "
