@@ -1,15 +1,11 @@
 "use client";
 
-//로그인 모드와 회원가입 모드를 바꾸기 위해 상태값을 사용한다.
-import { useState } from "react";
-
-// 로그인 모드에서 보여줄 로그인 폼을 가져온다.
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { LoginForm } from "@/domains/auth/components/LoginForm";
-
-// 회원가입 모드에서 보여줄 회원가입 폼을 가져온다.
 import { SignupForm } from "@/domains/auth/components/SignupForm";
+import "./AuthModal.css";
 
-//부모 컴포넌트에서 전달받을 값을 정의한다.
 interface AuthModalProps {
   onClose: () => void;
 
@@ -22,33 +18,98 @@ export function AuthModal({ onClose, initialMode = "login" }: AuthModalProps) {
   // 현재 모달이 로그인 화면인지 회원가입 화면인지 관리한다.
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
 
+  // 모달이 열려 있을 때 뒤 페이지 스크롤 막기
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  // ESC로 닫기
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
-    // 화면 전체를 덮는 모달 배경
-    <div>
-      {/* 실제 모달 내용 영역 */}
-      <div>
-        {/* 모달 닫기 버튼 */}
-        <button type="button" onClick={onClose} aria-label="인증 모달 닫기">
-          ×
-        </button>
+    <div
+      className="auth-modal-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="auth-modal">
+        {/* 왼쪽 */}
+        <section className="auth-modal-left">
+          <div className="auth-logo-area">
+            <Image
+              src="/images/tada-logo.png"
+              alt="TADA"
+              width={150}
+              height={80}
+              className="auth-logo"
+              priority
+            />
 
-        {/* 로그인 / 회원가입 화면 전환 버튼 */}
-        <div>
-          <button type="button" onClick={() => setMode("login")}>
-            로그인
+            <p className="auth-logo-description">
+              일상을 기록하고,
+              <br />
+              나만의 스티커로 기억해요
+            </p>
+          </div>
+        </section>
+
+        {/* 오른쪽 */}
+        <section className="auth-modal-right">
+          <button
+            type="button"
+            className="auth-close-button"
+            onClick={onClose}
+            aria-label="인증 모달 닫기"
+          >
+            ×
           </button>
 
-          <button type="button" onClick={() => setMode("signup")}>
-            회원가입
-          </button>
-        </div>
+          <div className="auth-tabs">
+            <button
+              type="button"
+              className={`auth-tab ${mode === "login" ? "active" : ""}`}
+              onClick={() => setMode("login")}
+            >
+              Login
+            </button>
 
-        {/* 현재 mode에 따라 보여줄 폼을 변경한다. */}
-        {mode === "login" ? (
-          <LoginForm onSuccess={onClose} />
-        ) : (
-          <SignupForm onSuccess={() => setMode("login")} />
-        )}
+            <button
+              type="button"
+              className={`auth-tab ${mode === "signup" ? "active" : ""}`}
+              onClick={() => setMode("signup")}
+            >
+              Signup
+            </button>
+          </div>
+
+          <div className="auth-form-area">
+            {mode === "login" ? (
+              <LoginForm onSuccess={onClose} />
+            ) : (
+              <SignupForm onSuccess={() => setMode("login")} />
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

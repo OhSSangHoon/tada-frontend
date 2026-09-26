@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+
 import { PersonCard } from "@/domains/curator/components/PersonCard";
 import { PersonDetailModal } from "@/domains/curator/components/PersonDetailModal";
 import { usePersons } from "@/domains/curator/hooks/usePersons";
-import {
-  SidePanelBody,
-  SidePanelHeader,
-} from "@/shared/components/side-panel/SidePanelParts";
+import { SidePanelHeader } from "@/shared/components/side-panel/SidePanelParts";
 
 interface PeoplePanelProps {
   isOpen: boolean;
@@ -17,6 +15,9 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     data: persons = [],
@@ -26,11 +27,19 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
   } = usePersons(isOpen);
 
   useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isOpen || !isSearchOpen) {
       return;
     }
 
-    function handleSearchEscape(event: KeyboardEvent) {
+    function handleEscape(event: KeyboardEvent) {
       if (event.key !== "Escape") {
         return;
       }
@@ -42,10 +51,10 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
       setQuery("");
     }
 
-    document.addEventListener("keydown", handleSearchEscape, true);
+    document.addEventListener("keydown", handleEscape, true);
 
     return () => {
-      document.removeEventListener("keydown", handleSearchEscape, true);
+      document.removeEventListener("keydown", handleEscape, true);
     };
   }, [isOpen, isSearchOpen]);
 
@@ -57,17 +66,28 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
     }
 
     return persons.filter((person) =>
-      [person.displayName, ...person.aliases].some((name) =>
-        name.toLowerCase().includes(keyword),
-      ),
+      person.displayName.toLowerCase().includes(keyword),
     );
   }, [persons, query]);
 
+  function handleScroll() {
+    setIsScrolling(true);
+
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsScrolling(false);
+    }, 700);
+  }
+
   return (
     <>
-      <div className="relative shrink-0">
+      <div className="relative shrink-0 bg-white">
         <SidePanelHeader
           title="내 일기 속 사람들"
+          badge={persons.length}
           description="일기에 남은 사람들과 함께한 순간을 모아봤어요."
         />
 
@@ -85,15 +105,15 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
 
         {isSearchOpen && (
           <div className="flex items-center gap-2 px-6 pb-4">
-            <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl bg-[#F8F5F3] px-3">
+            <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#EDE8E5] bg-white px-3 focus-within:border-[#F3BE98] focus-within:ring-2 focus-within:ring-[#F97316]/10">
               <SearchIcon className="h-4 w-4 shrink-0 text-[#F97316]" />
 
               <input
                 autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="이름 또는 별칭 검색"
-                className="min-w-0 flex-1 bg-transparent text-sm text-[#40312E] outline-none placeholder:text-[#B9B0AB]"
+                placeholder="이름 검색"
+                className="min-w-0 flex-1 bg-transparent text-[12px] text-[#40312E] outline-none placeholder:text-[#B6ADA8]"
               />
             </div>
 
@@ -110,7 +130,20 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
         )}
       </div>
 
-      <SidePanelBody>
+      <div
+        onScroll={handleScroll}
+        className={`
+          min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-1
+          [&::-webkit-scrollbar]:w-2
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          ${
+            isScrolling
+              ? "[&::-webkit-scrollbar-thumb]:bg-[#AEA49F]"
+              : "[&::-webkit-scrollbar-thumb]:bg-transparent"
+          }
+        `}
+      >
         {isLoading ? (
           <PeopleSkeleton />
         ) : isError ? (
@@ -131,7 +164,7 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
             description="다른 이름으로 검색해 보세요."
           />
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2.5">
             {filteredPersons.map((person) => (
               <PersonCard
                 key={person.id}
@@ -141,7 +174,7 @@ export function PeoplePanel({ isOpen }: PeoplePanelProps) {
             ))}
           </div>
         )}
-      </SidePanelBody>
+      </div>
 
       {selectedPersonId && (
         <PersonDetailModal
@@ -210,16 +243,20 @@ function CloseIcon() {
 
 function PeopleSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3" aria-label="사람 목록 불러오는 중">
-      {Array.from({ length: 6 }, (_, index) => (
+    <div className="space-y-2.5">
+      {Array.from({ length: 5 }, (_, index) => (
         <div
           key={index}
-          className="flex min-h-[176px] animate-pulse flex-col items-center rounded-2xl border border-[#F2ECE8] px-3 py-4"
+          className="flex h-[106px] animate-pulse items-center gap-3 rounded-[17px] border border-[#F0ECE9] px-3"
         >
-          <div className="h-[72px] w-[72px] rounded-full bg-[#F5F0ED]" />
-          <div className="mt-3 h-4 w-20 rounded bg-[#F0EAE6]" />
-          <div className="mt-2 h-3 w-24 rounded bg-[#F5F0ED]" />
-          <div className="mt-3 h-3 w-20 rounded bg-[#F5F0ED]" />
+          <div className="h-[80px] w-[80px] rounded-[18px] bg-[#F5F0ED]" />
+
+          <div className="flex-1">
+            <div className="h-4 w-20 rounded bg-[#EEE9E6]" />
+            <div className="mt-3 h-5 w-36 rounded bg-[#F5F0ED]" />
+          </div>
+
+          <div className="h-4 w-4 rounded bg-[#EEE9E6]" />
         </div>
       ))}
     </div>
@@ -240,12 +277,12 @@ function PanelMessage({
   onAction,
 }: PanelMessageProps) {
   return (
-    <div className="flex min-h-[360px] flex-col items-center justify-center px-6 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF7ED] text-[#F97316]">
+    <div className="flex min-h-[330px] flex-col items-center justify-center text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#FFF7ED] text-[#F97316]">
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
-          className="h-7 w-7"
+          className="h-6 w-6"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.6"
@@ -255,15 +292,15 @@ function PanelMessage({
         </svg>
       </div>
 
-      <p className="mt-4 text-[16px] font-semibold text-[#40312E]">{title}</p>
+      <p className="mt-4 text-[15px] font-semibold text-[#40312E]">{title}</p>
 
-      <p className="mt-1 text-[14px] text-[#958B86]">{description}</p>
+      <p className="mt-1 text-[12px] text-[#958B86]">{description}</p>
 
       {actionLabel && onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="mt-5 rounded-xl bg-[#F97316] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#EA6A0B]"
+          className="mt-4 rounded-xl bg-[#F97316] px-4 py-2 text-[12px] font-semibold text-white"
         >
           {actionLabel}
         </button>
