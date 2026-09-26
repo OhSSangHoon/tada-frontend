@@ -8,10 +8,15 @@ import "./AuthModal.css";
 
 interface AuthModalProps {
   onClose: () => void;
+
+  // 모달을 열 때 처음 보여줄 화면
+  initialMode?: "login" | "signup";
 }
 
-export function AuthModal({ onClose }: AuthModalProps) {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+//인증 모달 컴포넌트
+export function AuthModal({ onClose, initialMode = "login" }: AuthModalProps) {
+  // 현재 모달이 로그인 화면인지 회원가입 화면인지 관리한다.
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
 
   // 모달이 열려 있을 때 뒤 페이지 스크롤 막기
   useEffect(() => {
