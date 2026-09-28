@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { TrashIcon } from "@/shared/components/TrashIcon";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { TrashPanel } from "@/domains/diary/components/TrashPanel";
 import { PeoplePanel } from "@/domains/curator/components/PeoplePanel";
 import { MemoryRecallPanel } from "@/domains/curator/components/MemoryRecallPanel";
 import { SidePanelRail } from "@/shared/components/side-panel/SidePanelRail";
 import { StickerPanel } from "@/domains/sticker/components/StickerPanel";
+import { useLogout } from "@/domains/auth/hooks/useLogout";
 import {
   AlbumIcon,
+  LogoutIcon,
   MemoryIcon,
   PeopleIcon,
 } from "@/shared/components/side-panel/icons";
@@ -51,5 +55,35 @@ const items = [
 ];
 
 export function SidePanels() {
-  return <SidePanelRail items={items} />;
+  const logoutMutation = useLogout();
+
+  // 로그아웃 확인창이 열려 있는지 관리한다.
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+
+  return (
+    <>
+      <SidePanelRail
+        items={[
+          ...items,
+          {
+            id: "logout",
+            label: "로그아웃",
+            icon: <LogoutIcon className="h-7 w-7" />,
+            onClick: () => setIsLogoutConfirmOpen(true),
+          },
+        ]}
+      />
+
+      {isLogoutConfirmOpen && (
+        <ConfirmModal
+          message="로그아웃할까요?"
+          confirmLabel="로그아웃"
+          cancelLabel="취소"
+          isPending={logoutMutation.isPending}
+          onConfirm={() => logoutMutation.mutate()}
+          onCancel={() => setIsLogoutConfirmOpen(false)}
+        />
+      )}
+    </>
+  );
 }

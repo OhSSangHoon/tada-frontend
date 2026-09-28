@@ -37,3 +37,12 @@ export function AlbumIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function LogoutIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 48 48" fill="currentColor" className={className}>
+      <path d="M22 6h-8a4 4 0 0 0-4 4v28a4 4 0 0 0 4 4h8v-4h-8V10h8z" />
+      <path d="M28.6 15.4 26 18l4.6 4.6H16v3.8h14.6L26 31l2.6 2.6L38.4 24z" />
+    </svg>
+  );
+}
