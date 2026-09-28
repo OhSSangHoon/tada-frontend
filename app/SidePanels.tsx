@@ -3,8 +3,8 @@
 import { TrashIcon } from "@/shared/components/TrashIcon";
 import { TrashPanel } from "@/domains/diary/components/TrashPanel";
 import { PeoplePanel } from "@/domains/curator/components/PeoplePanel";
+import { MemoryRecallPanel } from "@/domains/curator/components/MemoryRecallPanel";
 import { SidePanelRail } from "@/shared/components/side-panel/SidePanelRail";
-import { SidePanelPlaceholder } from "@/shared/components/side-panel/SidePanelParts";
 import { StickerPanel } from "@/domains/sticker/components/StickerPanel";
 import {
   AlbumIcon,
@@ -18,10 +18,10 @@ const items = [
     id: "memories",
     label: "다시 꺼내본 일기",
     icon: <MemoryIcon className="h-7 w-7" />,
-    renderContent: () => (
-      <SidePanelPlaceholder
-        title="다시 꺼내본 일기"
-        description="작년 이맘때 어떤 하루를 보냈는지 다시 볼 수 있어요."
+    renderContent: (isOpen: boolean) => (
+      <MemoryRecallPanel
+        key={isOpen ? "memory-recall-open" : "memory-recall-closed"}
+        isOpen={isOpen}
       />
     ),
   },

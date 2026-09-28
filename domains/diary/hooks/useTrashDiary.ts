@@ -9,6 +9,7 @@ export function useTrashDiary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["calendar"] });
       queryClient.invalidateQueries({ queryKey: ["trash"] });
+      queryClient.invalidateQueries({ queryKey: ["memory-recall"] });
     },
   });
 }

@@ -31,8 +31,8 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-gray-100 shadow-lg p-4 rounded-md mx-auto w-full">
-        <h1 className="text-3xl font-bold">Header</h1>
+      <header>
+       {/* <h1 className="text-3xl font-bold">Header</h1> */}
 
         {/* 인증 상태에 따라 로그인 또는 사용자 정보를 보여준다. */}
         {!isAuthReady ? (

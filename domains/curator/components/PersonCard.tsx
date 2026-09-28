@@ -1,4 +1,5 @@
 import Image from "next/image";
+
 import type { PersonSummaryResponse } from "@/domains/curator/types/curator";
 
 interface PersonCardProps {
@@ -11,37 +12,54 @@ export function PersonCard({ person, onClick }: PersonCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-[176px] w-full flex-col items-center rounded-2xl border border-[#F0E9E5] bg-white px-3 py-4 text-center transition hover:-translate-y-0.5 hover:border-[#F6C9A9] hover:shadow-md"
+      className="
+        group flex w-full items-center gap-3
+        rounded-[17px] border border-[#EEE9E6]
+        bg-white px-3 py-3 text-left
+        transition-[transform,border-color,box-shadow,background-color]
+        duration-200
+        hover:-translate-y-[1px]
+        hover:border-[#F5C4A1]
+        hover:bg-[#FFFEFD]
+        hover:shadow-[0_7px_22px_rgba(64,49,46,0.07)]
+        focus:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-[#F97316]/20
+      "
     >
-      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full bg-[#FFF7ED] ring-1 ring-[#F6E9DF]">
+      <div className="relative h-[80px] w-[80px] shrink-0 overflow-hidden rounded-[18px] bg-[#FFF7ED]">
         {person.stickerUrl ? (
           <Image
             src={person.stickerUrl}
             alt=""
             fill
-            sizes="72px"
-            className="object-cover"
+            sizes="80px"
+            className="object-contain p-1"
           />
         ) : (
           <PersonPlaceholder />
         )}
       </div>
 
-      <p className="mt-3 max-w-full truncate text-[16px] font-bold text-[#40312E]">
-        {person.displayName}
-      </p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[18px] font-bold tracking-[-0.015em] text-[#40312E]">
+          {person.displayName}
+        </p>
 
-      <p className="mt-1 text-[12px] text-[#958B86]">
-        함께한 기록{" "}
-        <strong className="font-semibold text-[#F97316]">
-          {person.mentionCount}
-        </strong>
-        개
-      </p>
+        <div className="mt-2.5 flex items-center gap-2 text-[12px]">
+          <p className="shrink-0 font-semibold text-[#F97316]">
+            함께한 기록 {person.mentionCount}개
+          </p>
 
-      <p className="mt-2 text-[11px] text-[#AAA09B]">
-        최근 {formatDate(person.lastMentionedAt)}
-      </p>
+          <span className="h-3 w-px shrink-0 bg-[#E8E2DF]" />
+
+          <p className="truncate font-medium text-[#7E746F]">
+            최근 {formatDate(person.lastMentionedAt)}
+          </p>
+        </div>
+      </div>
+
+      <ChevronIcon />
     </button>
   );
 }
@@ -64,6 +82,23 @@ function PersonPlaceholder() {
   );
 }
 
+function ChevronIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-4 w-4 shrink-0 text-[#9D948F] transition duration-200 group-hover:translate-x-0.5 group-hover:text-[#F97316]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
 function formatDate(date: string) {
   const [year, month, day] = date.slice(0, 10).split("-");
 
@@ -71,5 +106,5 @@ function formatDate(date: string) {
     return date;
   }
 
-  return `${Number(month)}월 ${Number(day)}일`;
+  return `${year}.${month}.${day}`;
 }
