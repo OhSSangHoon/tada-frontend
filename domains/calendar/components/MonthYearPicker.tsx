@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent,
-  type WheelEvent,
-} from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { sebangGothicRegular } from "@/domains/calendar/utils/fonts";
 
 const ITEM_HEIGHT = 44;
 const VISIBLE_ROWS = 5;
@@ -82,6 +77,8 @@ export function MonthYearPicker({
   );
 
   const yearTrackRef = useRef<HTMLDivElement>(null);
+  const yearViewportRef = useRef<HTMLDivElement>(null);
+  const monthViewportRef = useRef<HTMLDivElement>(null);
   const yearItemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const monthItemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const yearDragRef = useRef<DragState | null>(null);
@@ -103,8 +100,7 @@ export function MonthYearPicker({
       const distance = Math.abs(i - pos);
       el.style.opacity = String(Math.max(1 - distance * 0.3, 0.35));
       el.style.transform = `scale(${Math.max(1 - distance * 0.1, 0.8)})`;
-      el.style.fontWeight = distance < 0.5 ? "700" : "400";
-      el.style.color = distance < 0.5 ? "#40312E" : "#8A8A8A";
+      el.style.color = distance < 0.5 ? "#FFEDD5" : "#A8A29E";
     });
   }
 
@@ -115,8 +111,7 @@ export function MonthYearPicker({
       const distance = Math.abs(diff);
       el.style.transform = `translateY(${CENTER_OFFSET + diff * ITEM_HEIGHT}px) scale(${Math.max(1 - distance * 0.1, 0.8)})`;
       el.style.opacity = String(Math.max(1 - distance * 0.3, 0.35));
-      el.style.fontWeight = distance < 0.5 ? "700" : "400";
-      el.style.color = distance < 0.5 ? "#40312E" : "#8A8A8A";
+      el.style.color = distance < 0.5 ? "#FFEDD5" : "#A8A29E";
     });
   }
 
@@ -204,7 +199,7 @@ export function MonthYearPicker({
     // engaged가 false면(=드래그 문턱을 안 넘겼으면) 아무 것도 안 하고 네이티브 클릭이 그대로 처리하게 둔다
   }
 
-  function handleYearWheel(e: WheelEvent<HTMLDivElement>) {
+  function handleYearWheel(e: globalThis.WheelEvent) {
     e.preventDefault();
     yearWheelAccum.current += e.deltaY;
     if (Math.abs(yearWheelAccum.current) >= WHEEL_STEP_PX) {
@@ -257,7 +252,7 @@ export function MonthYearPicker({
     }
   }
 
-  function handleMonthWheel(e: WheelEvent<HTMLDivElement>) {
+  function handleMonthWheel(e: globalThis.WheelEvent) {
     e.preventDefault();
     monthWheelAccum.current += e.deltaY;
     if (Math.abs(monthWheelAccum.current) >= WHEEL_STEP_PX) {
@@ -271,6 +266,21 @@ export function MonthYearPicker({
     }, 200);
   }
 
+  // React의 onWheel은 wheel 이벤트를 passive로 등록해서 그 안에서 preventDefault()를
+  // 호출하면 콘솔에 경고만 뜨고 실제로는 막히지 않는다(브라우저가 무시함) — 그래서
+  // 페이지 스크롤 유출을 막으려면 { passive: false }로 네이티브 리스너를 직접 달아야 한다.
+  useEffect(() => {
+    const yearEl = yearViewportRef.current;
+    const monthEl = monthViewportRef.current;
+    yearEl?.addEventListener("wheel", handleYearWheel, { passive: false });
+    monthEl?.addEventListener("wheel", handleMonthWheel, { passive: false });
+    return () => {
+      yearEl?.removeEventListener("wheel", handleYearWheel);
+      monthEl?.removeEventListener("wheel", handleMonthWheel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const displayYear = minYear + Math.floor(total / 12);
   const displayMonth = (((total % 12) + 12) % 12) + 1;
 
@@ -282,7 +292,7 @@ export function MonthYearPicker({
         // 버튼과 top-0/right-0로 같은 꼭짓점을 공유하다 보니, 둥근 모서리(rounded-2xl)가
         // 그 꼭짓점을 깎아내서 버튼의 각진 모서리가 살짝 삐져나와 보였다.
         // 오른쪽 위 모서리만 각지게 둬서 버튼을 완전히 덮게 한다.
-        className="absolute right-0 top-0 z-50 w-[280px] rounded-2xl rounded-tr-none bg-white p-4 shadow-lg"
+        className="absolute right-0 top-0 z-50 w-[280px] rounded-2xl rounded-tr-none bg-[#40312E] p-4 shadow-2xl"
         style={{ animation: "date-picker-slide-down 160ms ease-out" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -291,22 +301,22 @@ export function MonthYearPicker({
           type="button"
           onClick={onCancel}
           aria-label="닫기"
-          className="absolute right-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="absolute right-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#B8B8B8] hover:bg-white/10 hover:text-white"
         >
           ✕
         </button>
         <div className="mt-4 flex gap-2">
           <div
-            className="relative flex-1 touch-none select-none overflow-hidden overscroll-contain"
+            ref={yearViewportRef}
+            className={`relative flex-1 touch-none select-none overflow-hidden overscroll-contain ${sebangGothicRegular.className}`}
             style={{ height: VIEWPORT_HEIGHT, cursor: "grab" }}
-            onWheel={handleYearWheel}
             onPointerDown={handleYearPointerDown}
             onPointerMove={handleYearPointerMove}
             onPointerUp={handleYearPointerUp}
             onPointerCancel={handleYearPointerUp}
           >
             <div
-              className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-xl bg-[#FFEDD5]"
+              className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-md border-2 border-[#F97316] bg-white/5"
               style={{ height: ITEM_HEIGHT }}
             />
             <div ref={yearTrackRef} className="absolute inset-x-0 top-0">
@@ -332,16 +342,16 @@ export function MonthYearPicker({
           </div>
 
           <div
-            className="relative flex-1 touch-none select-none overflow-hidden overscroll-contain"
+            ref={monthViewportRef}
+            className={`relative flex-1 touch-none select-none overflow-hidden overscroll-contain ${sebangGothicRegular.className}`}
             style={{ height: VIEWPORT_HEIGHT, cursor: "grab" }}
-            onWheel={handleMonthWheel}
             onPointerDown={handleMonthPointerDown}
             onPointerMove={handleMonthPointerMove}
             onPointerUp={handleMonthPointerUp}
             onPointerCancel={handleMonthPointerUp}
           >
             <div
-              className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-xl bg-[#FFEDD5]"
+              className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-md border-2 border-[#F97316] bg-white/5"
               style={{ height: ITEM_HEIGHT }}
             />
             {Array.from({ length: 12 }, (_, i) => i).map((i) => (
@@ -365,7 +375,7 @@ export function MonthYearPicker({
         </div>
         <button
           onClick={() => onConfirm(displayYear, displayMonth)}
-          className="mt-3 w-full cursor-pointer rounded-full bg-[#F97316] py-2.5 text-sm font-medium text-white"
+          className={`mt-3 w-full cursor-pointer rounded-full bg-[#F97316] py-2.5 text-sm text-white ${sebangGothicRegular.className}`}
         >
           이동
         </button>
