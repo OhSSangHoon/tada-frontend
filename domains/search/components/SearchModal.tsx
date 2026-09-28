@@ -28,6 +28,7 @@ export function SearchModal() {
     changeSort,
     data,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
@@ -36,6 +37,11 @@ export function SearchModal() {
   } = useSearch();
 
   useInvalidateSearchOnDiaryUpdate(selectedResult?.id);
+
+  // 이전 검색 결과가 화면에 남아있는 상태로, 새 검색(다음 페이지/정렬 변경 포함)이
+  // 백그라운드에서 진행 중인 경우. isLoading은 최초 검색에서만 true가 되므로
+  // 두 번째 검색부터는 이 값으로만 "지금 갱신 중"임을 알 수 있다.
+  const isRefetching = hasSearched && isFetching && !isLoading;
 
   const handleClose = () => {
     setIsOpen(false);
@@ -98,18 +104,42 @@ export function SearchModal() {
           <button
             type="submit"
             aria-label="검색"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white hover:bg-orange-600  cursor-pointer"
+            disabled={isFetching}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <circle cx="11" cy="11" r="7" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+            {isFetching ? (
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 animate-spin"
+                fill="none"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  strokeOpacity={0.3}
+                />
+                <path
+                  d="M21 12a9 9 0 0 0-9-9"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            )}
           </button>
         </form>
 
@@ -119,35 +149,44 @@ export function SearchModal() {
 
         <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
           <span className="text-sm font-medium text-gray-700">검색 내용</span>
-          {hasSearched && (
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => changeSort("latest")}
-                className={
-                  sort === "latest"
-                    ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
-                    : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
-                }
-              >
-                최신순
-              </button>
-              <button
-                type="button"
-                onClick={() => changeSort("oldest")}
-                className={
-                  sort === "oldest"
-                    ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
-                    : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
-                }
-              >
-                오래된순
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {isRefetching && (
+              <span className="text-xs text-gray-400">검색 중…</span>
+            )}
+            {hasSearched && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => changeSort("latest")}
+                  className={
+                    sort === "latest"
+                      ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
+                      : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
+                  }
+                >
+                  최신순
+                </button>
+                <button
+                  type="button"
+                  onClick={() => changeSort("oldest")}
+                  className={
+                    sort === "oldest"
+                      ? "rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-600 cursor-pointer"
+                      : "rounded-full px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 cursor-pointer"
+                  }
+                >
+                  오래된순
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className={`flex-1 overflow-y-auto transition-opacity ${
+            isRefetching ? "opacity-50" : ""
+          }`}
+        >
           {!hasSearched && !validationError && (
             <p className="px-4 py-8 text-center text-sm text-gray-400">
               검색어를 입력해 일기를 찾을 수 있습니다.
@@ -201,7 +240,11 @@ export function SearchModal() {
         </div>
 
         {data && data.totalPages > 1 && (
-          <div className="border-t border-gray-100">
+          <div
+            className={`border-t border-gray-100 transition-opacity ${
+              isRefetching ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
             <Pagination
               currentPage={page}
               totalPages={data.totalPages}
