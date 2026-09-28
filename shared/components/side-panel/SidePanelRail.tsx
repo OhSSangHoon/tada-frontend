@@ -46,7 +46,7 @@ export function SidePanelRail({ items }: SidePanelRailProps) {
             onClick={() => (item.onClick ? item.onClick() : setOpenId(item.id))}
             aria-label={item.onClick ? item.label : `${item.label} 열기`}
             title={item.label}
-            className="flex h-15 w-15 cursor-pointer items-center justify-center rounded-l-2xl bg-[#40312E] text-[#FFEDD5] shadow-lg"
+            className="flex h-15 w-15 cursor-pointer items-center justify-center rounded-l-2xl bg-[#40312E] text-[#FFEDD5] shadow-lg transition-colors hover:brightness-90"
           >
             {item.icon}
           </button>
