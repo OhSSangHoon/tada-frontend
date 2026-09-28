@@ -126,7 +126,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type="button"
           onClick={() => socialLogin("google")}
           aria-label="Google 로그인"
-          className="flex h-[64px] w-[64px] items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
+          className="flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
         >
           <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
             <path
