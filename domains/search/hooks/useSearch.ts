@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   searchDiaries,
@@ -66,7 +66,8 @@ export function useSearch() {
 
     const totalItems = rawData.content.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / DEFAULT_PAGE_SIZE));
-    const start = page * DEFAULT_PAGE_SIZE;
+    const safePage = Math.min(page, totalPages - 1);
+    const start = safePage * DEFAULT_PAGE_SIZE;
     const pagedContent = rawData.content.slice(
       start,
       start + DEFAULT_PAGE_SIZE,
@@ -78,6 +79,24 @@ export function useSearch() {
       totalPages,
     };
   }, [rawData, page]);
+
+  // rawData가 바뀔 때(재검색/백그라운드 리페치로 매칭 개수가 줄었을 때) page state
+  // 자체도 안전한 범위로 되돌림 (TrashPanel.tsx와 동일한 clamp 패턴)
+  useEffect(() => {
+    if (!rawData) return;
+    const totalPages = Math.max(
+      1,
+      Math.ceil(rawData.content.length / DEFAULT_PAGE_SIZE),
+    );
+    setPage((prev) => Math.min(prev, Math.max(totalPages - 1, 0)));
+  }, [rawData]);
+
+  // 매칭되는 일기가 SEARCH_FETCH_SIZE(15)보다 많아서 서버에 더 있는데도
+  // 못 받아온 상태인지 여부. 이 경우 화면에 "더 있음"을 알려주기 위해 사용
+
+  const hasMoreResults = rawData
+    ? rawData.totalElements > rawData.content.length
+    : false;
 
   const handleSubmit = (e?: FormEvent) => {
     e?.preventDefault();
@@ -132,6 +151,7 @@ export function useSearch() {
     sort,
     changeSort,
     data,
+    hasMoreResults,
     isLoading: isLoading && submittedQuery.length > 0,
     isFetching,
     isError,

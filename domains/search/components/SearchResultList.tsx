@@ -7,13 +7,6 @@ interface SearchResultListProps {
   onSelectDiary: (result: SearchResultResponse) => void;
 }
 
-const CONTENT_PREVIEW_LENGTH = 40;
-
-function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength)}...`;
-}
-
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -79,10 +72,7 @@ export function SearchResultList({
               </span>
             </div>
             <p className="mt-1 truncate text-sm text-gray-500">
-              {highlightKeyword(
-                truncate(item.content, CONTENT_PREVIEW_LENGTH),
-                keyword,
-              )}
+              {highlightKeyword(item.content, keyword)}
             </p>
           </div>
         </li>

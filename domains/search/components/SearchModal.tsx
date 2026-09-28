@@ -27,6 +27,7 @@ export function SearchModal() {
     sort,
     changeSort,
     data,
+    hasMoreResults,
     isLoading,
     isFetching,
     isError,
@@ -104,8 +105,7 @@ export function SearchModal() {
           <button
             type="submit"
             aria-label="검색"
-            disabled={isFetching}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white hover:bg-orange-600 cursor-pointer"
           >
             {isFetching ? (
               <svg
@@ -238,6 +238,12 @@ export function SearchModal() {
               />
             )}
         </div>
+
+        {hasMoreResults && !isLoading && !isError && (
+          <p className="border-t border-gray-100 px-4 py-2 text-center text-xs text-gray-400">
+            검색 결과가 많아 최근 15개까지만 보여드려요.
+          </p>
+        )}
 
         {data && data.totalPages > 1 && (
           <div
