@@ -147,17 +147,12 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
       />
 
       {password !== passwordConfirm && passwordConfirm.length > 0 && (
-        <p className="text-xs text-red-500">
-          비밀번호가 일치하지 않습니다.
-        </p>
+        <p className="text-xs text-red-500">비밀번호가 일치하지 않습니다.</p>
       )}
 
       <button
         type="submit"
-        disabled={
-          signupMutation.isPending ||
-          password !== passwordConfirm
-        }
+        disabled={signupMutation.isPending || password !== passwordConfirm}
         className="
           relative flex h-11 w-full items-center justify-center
           rounded-lg bg-linear-to-r from-[#ff8a45] to-[#ff6938]
