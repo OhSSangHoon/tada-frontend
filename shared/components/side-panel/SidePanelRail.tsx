@@ -6,7 +6,9 @@ export interface SidePanelItem {
   id: string;
   label: string;
   icon: ReactNode;
-  renderContent: (isOpen: boolean) => ReactNode;
+  // 패널 없이 누르는 즉시 실행되는 항목(예: 로그아웃)은 renderContent 대신 onClick만 넘긴다.
+  onClick?: () => void;
+  renderContent?: (isOpen: boolean) => ReactNode;
 }
 
 interface SidePanelRailProps {
@@ -37,14 +39,14 @@ export function SidePanelRail({ items }: SidePanelRailProps) {
         <div className="fixed inset-0 z-30" onClick={() => setOpenId(null)} />
       )}
 
-      <div className="fixed right-0 top-24 z-[35] flex flex-col gap-2">
+      <div className="fixed right-0 top-24 z-35 flex flex-col gap-2">
         {items.map((item) => (
           <button
             key={item.id}
-            onClick={() => setOpenId(item.id)}
-            aria-label={`${item.label} 열기`}
+            onClick={() => (item.onClick ? item.onClick() : setOpenId(item.id))}
+            aria-label={item.onClick ? item.label : `${item.label} 열기`}
             title={item.label}
-            className="flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-l-2xl bg-[#40312E] text-[#FFEDD5] shadow-lg transition-colors hover:brightness-90"
+            className="flex h-15 w-15 cursor-pointer items-center justify-center rounded-l-2xl bg-[#40312E] text-[#FFEDD5] shadow-lg transition-colors hover:brightness-90"
           >
             {item.icon}
           </button>
@@ -52,6 +54,7 @@ export function SidePanelRail({ items }: SidePanelRailProps) {
       </div>
 
       {items.map((item, index) => {
+        if (item.onClick) return null;
         const isOpen = openId === item.id;
         const offset = index * (TAB_SIZE + TAB_GAP);
 
@@ -64,7 +67,7 @@ export function SidePanelRail({ items }: SidePanelRailProps) {
               top: `calc(${RAIL_TOP} + ${offset}px)`,
               maxHeight: `calc(100vh - ${RAIL_TOP} - ${offset}px - 1rem)`,
             }}
-            className={`fixed right-0 z-40 flex h-[560px] w-[440px] flex-col bg-white transition-all duration-300 ${
+            className={`fixed right-0 z-40 flex h-140 w-110 flex-col bg-white transition-all duration-300 ${
               isOpen
                 ? "translate-x-0 opacity-100"
                 : "pointer-events-none translate-x-full opacity-0"
@@ -74,11 +77,11 @@ export function SidePanelRail({ items }: SidePanelRailProps) {
               type="button"
               onClick={() => setOpenId(null)}
               aria-label="닫기"
-              className="absolute right-6 top-[26px] z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="absolute right-6 top-6.5 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             >
               ✕
             </button>
-            {item.renderContent(isOpen)}
+            {item.renderContent?.(isOpen)}
           </aside>
         );
       })}

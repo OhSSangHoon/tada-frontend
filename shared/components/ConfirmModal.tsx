@@ -29,7 +29,7 @@ export function ConfirmModal({
       onClick={onCancel}
     >
       <div
-        className="w-[420px] rounded-3xl bg-white p-8 shadow-xl"
+        className="w-105 rounded-3xl bg-white p-8 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="mb-6 text-center text-sm text-gray-700">{message}</p>

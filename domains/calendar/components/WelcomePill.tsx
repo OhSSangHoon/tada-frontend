@@ -10,7 +10,7 @@ export function WelcomePill() {
   if (!me) return null;
 
   return (
-    <div className="absolute left-[3.3vw] top-0 flex h-[68px] w-[240px] flex-col items-center justify-center gap-[6px] rounded-[34px] bg-[#40312E] leading-none">
+    <div className="absolute left-[3.3vw] top-0 flex h-17 w-60 flex-col items-center justify-center gap-1.5 rounded-[34px] bg-[#40312E] leading-none">
       <span
         className="text-[17px] text-[#E98B50]"
         style={{
