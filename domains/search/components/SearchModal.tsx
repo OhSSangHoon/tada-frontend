@@ -241,7 +241,7 @@ export function SearchModal() {
 
         {hasMoreResults && !isLoading && !isError && (
           <p className="border-t border-gray-100 px-4 py-2 text-center text-xs text-gray-400">
-            검색 결과가 많아 최근 15개까지만 보여드려요.
+            검색 결과가 많아 15개까지만 보여드려요
           </p>
         )}
 

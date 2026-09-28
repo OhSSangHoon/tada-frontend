@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   searchDiaries,
@@ -80,16 +80,12 @@ export function useSearch() {
     };
   }, [rawData, page]);
 
-  // rawData가 바뀔 때(재검색/백그라운드 리페치로 매칭 개수가 줄었을 때) page state
-  // 자체도 안전한 범위로 되돌림 (TrashPanel.tsx와 동일한 clamp 패턴)
-  useEffect(() => {
-    if (!rawData) return;
-    const totalPages = Math.max(
-      1,
-      Math.ceil(rawData.content.length / DEFAULT_PAGE_SIZE),
-    );
-    setPage((prev) => Math.min(prev, Math.max(totalPages - 1, 0)));
-  }, [rawData]);
+  // 화면에 실제로 노출할 현재 페이지 번호. page state 자체는 건드리지 않고,
+  // data.totalPages 기준으로 즉시 clamp한 값만 계산해서 내려줌. 이펙트+setState로
+  // 동기화하면 불필요한 리렌더 케스케이드가 생겨서(set-state-in-effect) 순수 계산으로 대체
+  const currentPage = data
+    ? Math.min(page, Math.max(data.totalPages - 1, 0))
+    : page;
 
   // 매칭되는 일기가 SEARCH_FETCH_SIZE(15)보다 많아서 서버에 더 있는데도
   // 못 받아온 상태인지 여부. 이 경우 화면에 "더 있음"을 알려주기 위해 사용
@@ -146,7 +142,7 @@ export function useSearch() {
     submittedQuery,
     handleSubmit,
     validationError,
-    page,
+    page: currentPage,
     goToPage,
     sort,
     changeSort,
