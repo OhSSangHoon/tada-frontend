@@ -7,13 +7,6 @@ interface SearchResultListProps {
   onSelectDiary: (result: SearchResultResponse) => void;
 }
 
-const CONTENT_PREVIEW_LENGTH = 60;
-
-function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength)}...`;
-}
-
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -45,22 +38,22 @@ export function SearchResultList({
         <li
           key={item.id}
           onClick={() => onSelectDiary(item)}
-          className="flex cursor-pointer gap-3 px-4 py-3 hover:bg-gray-50"
+          className="flex cursor-pointer gap-4 px-4 py-4 hover:bg-gray-50"
         >
-          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-orange-50">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-orange-50">
             {item.stickerImageUrl ? (
               <Image
                 src={item.stickerImageUrl}
                 alt=""
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
+                width={64}
+                height={64}
+                className="h-full w-full object-contain"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-orange-200">
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-5 w-5"
+                  className="h-7 w-7"
                   fill="currentColor"
                 >
                   <circle cx="12" cy="12" r="10" />
@@ -71,18 +64,15 @@ export function SearchResultList({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="truncate text-sm font-medium text-gray-900">
+              <p className="truncate text-base font-semibold text-gray-900">
                 {highlightKeyword(item.title, keyword)}
               </p>
               <span className="shrink-0 text-xs text-gray-400">
                 {item.entryDate}
               </span>
             </div>
-            <p className="mt-0.5 text-xs text-gray-500">
-              {highlightKeyword(
-                truncate(item.content, CONTENT_PREVIEW_LENGTH),
-                keyword,
-              )}
+            <p className="mt-1 truncate text-sm text-gray-500">
+              {highlightKeyword(item.content, keyword)}
             </p>
           </div>
         </li>
