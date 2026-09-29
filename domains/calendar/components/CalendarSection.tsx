@@ -283,7 +283,7 @@ export function CalendarSection() {
                             );
                           }}
                           onDragEnd={() => setDraggingDiaryId(null)}
-                          className={`object-contain p-2.5 ${
+                          className={`object-contain p-1 ${
                             draggingDiaryId === item.diaryId ? "opacity-40" : ""
                           }`}
                         />
