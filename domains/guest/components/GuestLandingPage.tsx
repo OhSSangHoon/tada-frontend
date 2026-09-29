@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { DIARY_FONT } from "@/domains/diary/utils/fonts";
 
 interface GuestLandingPageProps {
@@ -41,15 +42,19 @@ function BgPattern() {
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      <img
+      <Image
         src={HERO_BG_IMAGE}
         alt=""
+        width={2286}
+        height={824}
+        sizes="90vw"
         style={{
           position: "absolute",
           left: "50%",
           top: "50%",
           transform: "translate(-50%, -50%)",
           width: "90%",
+          height: "auto",
           maxWidth: "none",
           opacity: 0.6,
         }}
@@ -91,9 +96,11 @@ export function GuestLandingPage({ onGetStarted }: GuestLandingPageProps) {
           <div className="relative w-full max-w-lg shrink-0 rotate-2 translate-x-12.5 -translate-y-12.5 rounded-3xl bg-[#FDF6EC] p-12 shadow-2xl md:w-xl">
             <div className="absolute -top-5 left-12 h-6 w-28 rounded-sm bg-yellow-300" />
             {/* 커피 스티커 - 카드 우측 상단에 살짝 겹치게 배치 */}
-            <img
+            <Image
               src={COFFEE_STICKER_IMAGE}
               alt="커피 스티커"
+              width={192}
+              height={192}
               className="pointer-events-none absolute -top-20 -right-8 h-48 w-48 object-contain drop-shadow-md"
             />
             <div className="pr-24">
