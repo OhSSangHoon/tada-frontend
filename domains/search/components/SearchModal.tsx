@@ -9,7 +9,7 @@ import { DiaryDetailModal } from "@/domains/diary/components/DiaryDetailModal";
 import { useInvalidateSearchOnDiaryUpdate } from "@/domains/search/hooks/useInvalidateSearchOnDiaryUpdate";
 import type { SearchResultResponse } from "@/domains/search/types/search";
 
-const FALLBACK_STICKER_IMAGE = "/stickers/goodday.png";
+const FALLBACK_STICKER_IMAGE = "/stickers/coffee.png";
 
 export function SearchModal() {
   const [isOpen, setIsOpen] = useState(false);
