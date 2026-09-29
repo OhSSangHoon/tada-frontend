@@ -82,11 +82,14 @@ export function GuestLandingPage({ onGetStarted }: GuestLandingPageProps) {
 
   useEffect(() => {
     const handleScroll = () => {
+      const swiper = swiperRef.current;
       if (
+        swiper &&
+        !swiper.mousewheel.enabled &&
         containerRef.current &&
         containerRef.current.getBoundingClientRect().top >= 0
       ) {
-        swiperRef.current?.mousewheel.enable();
+        swiper.mousewheel.enable();
       }
     };
     window.addEventListener("scroll", handleScroll);
@@ -100,12 +103,14 @@ export function GuestLandingPage({ onGetStarted }: GuestLandingPageProps) {
     >
       <Swiper
         direction="vertical"
-        mousewheel
+        speed={900}
+        mousewheel={{ thresholdDelta: 30, thresholdTime: 500 }}
         modules={[Mousewheel]}
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
         }}
-        onSlideChange={(swiper) => {
+        onSlideChangeTransitionEnd={(swiper) => {
+          // 전환이 끝난 뒤에 휠 캡처를 풀어야, 전환 중 들어오는 관성 스크롤이 Footer로 새지 않는다.
           if (swiper.activeIndex === swiper.slides.length - 1) {
             swiper.mousewheel.disable();
           }
