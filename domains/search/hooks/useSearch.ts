@@ -39,15 +39,17 @@ export function useSearch() {
     error,
     refetch,
   } = useQuery<SearchResultPage, ApiError>({
-    // page는 queryKey에서 뺐음: 페이지 이동은 이미 받아온 결과를 자르기만 할 뿐
-    // 새로 fetch(=새 임베딩 호출)하지 않음. 검색어나 정렬이 바뀔 때만 재요청됨.
-    queryKey: ["search", submittedQuery, sort],
+    // page와 sort는 queryKey에서 뺐음: 페이지 이동과 최신/오래된순 전환은 이미
+    // 받아온 결과를 프론트에서 자르거나 재정렬할 뿐 새로 fetch(=새 임베딩 호출)하지
+    // 않음. 검색어가 바뀔 때만 재요청됨.
+    queryKey: ["search", submittedQuery],
     queryFn: () =>
       searchDiaries({
         query: submittedQuery,
         page: DEFAULT_PAGE,
         size: SEARCH_FETCH_SIZE,
-        sort,
+        // 항상 유사도순으로 가까운 후보를 뽑고, 최신/오래된순은 그 후보 안에서만 재정렬
+        sort: "relevance",
       }),
     enabled: submittedQuery.length > 0,
     placeholderData: keepPreviousData,
@@ -64,11 +66,22 @@ export function useSearch() {
   const data = useMemo(() => {
     if (!rawData) return rawData;
 
-    const totalItems = rawData.content.length;
+    // relevance: 서버가 준 유사도 순서 그대로. latest/oldest: 받아온 후보 안에서만 재정렬
+    const sorted =
+      sort === "relevance"
+        ? rawData.content
+        : [...rawData.content].sort((a, b) => {
+            const diff =
+              a.entryDate.localeCompare(b.entryDate) ||
+              a.createdAt.localeCompare(b.createdAt);
+            return sort === "latest" ? -diff : diff;
+          });
+
+    const totalItems = sorted.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / DEFAULT_PAGE_SIZE));
     const safePage = Math.min(page, totalPages - 1);
     const start = safePage * DEFAULT_PAGE_SIZE;
-    const pagedContent = rawData.content.slice(
+    const pagedContent = sorted.slice(
       start,
       start + DEFAULT_PAGE_SIZE,
     );
@@ -78,7 +91,7 @@ export function useSearch() {
       content: pagedContent,
       totalPages,
     };
-  }, [rawData, page]);
+  }, [rawData, page, sort]);
 
   // 화면에 실제로 노출할 현재 페이지 번호. page state 자체는 건드리지 않고,
   // data.totalPages 기준으로 즉시 clamp한 값만 계산해서 내려줌. 이펙트+setState로
@@ -119,12 +132,10 @@ export function useSearch() {
   // 이미 받아온 rawData를 자르기만 하면 되므로 네트워크 요청 없이 즉시 반영됨
   const goToPage = (nextPage: number) => setPage(nextPage);
 
-  // 정렬 옵션 변경 시 페이지는 0으로 리셋.
-  // 최신순<->오래된순 전환은 서버 쿼리 자체가 달라서(entry_date ASC/DESC) 어쩔 수
-  // 없이 재요청 + 재임베딩이 발생함 - 필요하면 이 부분도 나중에 클라이언트에서
-  // 받아온 배열을 그냥 뒤집는 방식으로 최적화할 수 있음.
+  // 최신순/오래된순 버튼 토글: 이미 선택된 버튼을 다시 누르면 기본(유사도순)으로 복귀.
+  // 이미 받아온 후보를 프론트에서 재정렬하므로 네트워크 요청 없이 즉시 반영됨.
   const changeSort = (nextSort: SearchSortOption) => {
-    setSort(nextSort);
+    setSort((prev) => (prev === nextSort ? DEFAULT_SORT : nextSort));
     setPage(DEFAULT_PAGE);
   };
 

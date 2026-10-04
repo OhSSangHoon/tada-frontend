@@ -24,5 +24,6 @@ export interface SpringPage<T> {
 
 export type SearchResultPage = SpringPage<SearchResultResponse>;
 
-// SearchController의 sort 쿼리 파라미터와 1:1 매핑 (기본값: latest)
-export type SearchSortOption = "latest" | "oldest";
+// SearchController의 sort 쿼리 파라미터와 1:1 매핑 (백엔드 기본값: latest)
+// relevance: 임베딩 코사인 거리가 가까운 순 (유사도순)
+export type SearchSortOption = "relevance" | "latest" | "oldest";

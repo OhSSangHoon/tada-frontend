@@ -11,10 +11,11 @@ interface SearchParams {
   sort?: SearchSortOption;
 }
 
-// 백엔드 SearchController의 기본값과 동일하게 맞춤
+// 백엔드 기본값은 latest지만, 검색은 관련도 높은 일기가 먼저 보여야 하므로
+// 프론트는 항상 sort를 명시해서 relevance를 기본으로 요청함
 export const DEFAULT_PAGE = 0;
 export const DEFAULT_PAGE_SIZE = 3;
-export const DEFAULT_SORT: SearchSortOption = "latest";
+export const DEFAULT_SORT: SearchSortOption = "relevance";
 
 // GET /api/search?query=&page=&size=&sort=
 export function searchDiaries({
