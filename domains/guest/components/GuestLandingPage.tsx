@@ -7,6 +7,7 @@ import { Mousewheel } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import { DIARY_FONT } from "@/domains/diary/utils/fonts";
+import { SCROLL_TO_TOP_EVENT } from "@/shared/components/ScrollToTopButton";
 
 interface GuestLandingPageProps {
   // 본문 내 "회원가입하고 시작하기" 버튼 클릭 콜백
@@ -55,11 +56,12 @@ function BgPattern({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 overflow-hidden [contain:paint]"
     >
       <div
         className="absolute -inset-1/4 grid grid-cols-6 gap-x-20 gap-y-14"
-        style={{ transform: "rotate(20deg)", opacity }}
+        // 회전+반투명한 큰 이미지 격자를 스크롤마다 다시 그리지 않도록 GPU 레이어로 고정
+        style={{ transform: "rotate(20deg)", opacity, willChange: "transform" }}
       >
         {Array.from({ length: 48 }).map((_, i) => (
           <Image
@@ -68,6 +70,7 @@ function BgPattern({
             alt=""
             width={2286}
             height={824}
+            sizes="192px"
             className="h-auto w-48 shrink-0"
           />
         ))}
@@ -81,19 +84,37 @@ export function GuestLandingPage({ onGetStarted }: GuestLandingPageProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // Footer의 맨 위로 버튼으로 올라오는 중인지 (랜딩에 도착한 뒤 첫 슬라이드로 넘기기 위함)
+    let returningToTop = false;
+
     const handleScroll = () => {
       const swiper = swiperRef.current;
       if (
-        swiper &&
-        !swiper.mousewheel.enabled &&
-        containerRef.current &&
-        containerRef.current.getBoundingClientRect().top >= 0
+        !swiper ||
+        !containerRef.current ||
+        containerRef.current.getBoundingClientRect().top < 0
       ) {
+        return;
+      }
+      if (!swiper.mousewheel.enabled) {
         swiper.mousewheel.enable();
       }
+      if (returningToTop) {
+        returningToTop = false;
+        swiper.slideTo(0, 900);
+      }
+    };
+    // Footer의 맨 위로 버튼: 먼저 랜딩까지 부드럽게 올라온 뒤, 도착하면 첫 슬라이드로 전환한다.
+    const handleScrollToTop = () => {
+      returningToTop = true;
+      handleScroll();
     };
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener(SCROLL_TO_TOP_EVENT, handleScrollToTop);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener(SCROLL_TO_TOP_EVENT, handleScrollToTop);
+    };
   }, []);
 
   return (
